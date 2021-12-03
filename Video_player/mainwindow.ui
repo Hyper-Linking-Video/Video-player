@@ -14,24 +14,22 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="">
-    <property name="geometry">
-     <rect>
-      <x>130</x>
-      <y>280</y>
-      <width>485</width>
-      <height>54</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QLabel" name="VideoPlay">
-       <property name="text">
-        <string>TextLabel</string>
-       </property>
-      </widget>
-     </item>
-     <item>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QLabel" name="Video">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QWidget" name="widget" native="true">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>80</height>
+       </size>
+      </property>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <spacer name="horizontalSpacer_3">
@@ -49,7 +47,7 @@
        <item>
         <widget class="QPushButton" name="PlayButton">
          <property name="text">
-          <string>PushButton</string>
+          <string>&gt;</string>
          </property>
         </widget>
        </item>
@@ -69,7 +67,7 @@
        <item>
         <widget class="QPushButton" name="PauseButton">
          <property name="text">
-          <string>PushButton</string>
+          <string>||</string>
          </property>
         </widget>
        </item>
@@ -87,9 +85,9 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="LoadVideo">
+        <widget class="QPushButton" name="LoadVideoButton">
          <property name="text">
-          <string>PushButton</string>
+          <string>Load Video</string>
          </property>
         </widget>
        </item>
@@ -107,9 +105,9 @@
         </spacer>
        </item>
       </layout>
-     </item>
-    </layout>
-   </widget>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
