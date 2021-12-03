@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QMediaPlayer>
+#include <QAudioOutput>
 
 MyImage VideoFrame[9000];
 
@@ -64,5 +66,11 @@ void MainWindow::on_PlayButton_clicked(bool checked)
 {
     ui->PlayButton->setEnabled(false);
     ui->PauseButton->setEnabled(false);
+    QMediaPlayer* player = new QMediaPlayer;
+    QAudioOutput* audioOutput = new QAudioOutput;
+    player->setAudioOutput(audioOutput);
+    player->setSource(QUrl::fromLocalFile("E://AIFilmOne//AIFilmOne.wav"));
+    audioOutput->setVolume(50);
+    player->play();
 }
 
