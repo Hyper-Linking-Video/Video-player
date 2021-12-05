@@ -57,7 +57,8 @@ private:
     Ui::MainWindow *ui;
     QLabel *labelStatus;
     QLabel *labelMousePos;
-    QMediaPlayer Sound;
+    QMediaPlayer *soundPlayer;
+    QAudioOutput *audioOutput;
     QTimer* Timerswitch;
     int m_waitingtime=333;
     int imageid;
