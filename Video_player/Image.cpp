@@ -1,5 +1,7 @@
 #include "Image.h"
 
+//{"Links":[[{"AimVideoFrameNumber":1134,"AimVideoName":"E:/AIFilmOne","BottomRightPointX":240,
+//"BottomRightPointY":204,"HyperLinkName":"aaa","PrimaryVideoFrameNumber":1,"TopLeftPointX":116,"TopLeftPointY":138}
 
 // Constructor and Desctructors
 MyImage::MyImage()
