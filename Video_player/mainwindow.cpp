@@ -54,7 +54,7 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
-bool MainWindow::getSecondData(QScatterSeries *series)
+bool MainWindow::getSecondData(QScatterSeries *series,const QString &data_path)
 {
     QFile load_file(data_path);
     if (!load_file.open(QFile::ReadOnly))
