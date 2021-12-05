@@ -244,9 +244,18 @@ void MainWindow::on_PlayButton_clicked(bool checked)
 {
     ui->PlayButton->setEnabled(false);
     ui->PauseButton->setEnabled(false);
-    QAudioOutput *audioOutput = new QAudioOutput;
+    player = new QMediaPlayer;
+    audioOutput = new QAudioOutput;
     player->setAudioOutput(audioOutput);
-    player->setSource(QUrl::fromLocalFile("E://AIFilmOne//AIFilmOne.wav"));
+    QDir *videoPath = new QDir(VideoPath);
+    QStringList wavfilter;
+    wavfilter << "*.wav";
+    videoPath->setNameFilters(wavfilter);
+    QList<QFileInfo> *wavfile = new QList<QFileInfo>(videoPath->entryInfoList(wavfilter));
+    QString filepath = wavfile->at(0).filePath();
+    qDebug() << filepath;
+    player->setSource(QUrl::fromLocalFile(wavfile->at(0).filePath()));
+
     audioOutput->setVolume(50);
     player->play();
 }
