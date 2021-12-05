@@ -2,10 +2,12 @@
 #include "ui_mainwindow.h"
 #include <QFileDialog>
 #include <QMessageBox>
-#include <QMediaPlayer>
 #include <QMouseEvent>
 #include <QAudioOutput>
-//#include <QFile>
+#include <QFile>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonParseError>
 #include <QTimer>
 
 MyImage VideoFrame[9000];
@@ -42,12 +44,11 @@ MainWindow::MainWindow(QWidget *parent)
     this->setMouseTracking(true);
     connect(this->ui->net_set, SIGNAL(clicked(bool)), this, SLOT(mouseReleaseEvent(QMouseEvent * e)));
     //image
-    //m_waitingtime=;//based on the sound
     m_currentindex = 0;
-    m_timerswitch = new QTimer(this);
-    m_timerswitch->setSingleShot(true);
+    Timerswitch = new QTimer(this);
+    Timerswitch->setSingleShot(true);
     //QTimer::singleShot(m_waitingtime, this,SLOT(OnTimerSwitch()));
-    connect(m_timerswitch, SIGNAL(timeout()), this, SLOT(OnTimerSwitch()));
+    connect(Timerswitch, SIGNAL(timeout()), this, SLOT(OnTimerSwitch()));
 }
 
 MainWindow::~MainWindow()
@@ -83,7 +84,7 @@ bool MainWindow::getSecondData(QScatterSeries *series,const QString &data_path)
             qreal BottomRightPointX = -1;
             qreal BottomRightPointY = -1;
             qreal TopLeftPointX = -1;
-            qreal TopLeftPointX = -1;
+            qreal TopLeftPointY = -1;
             qreal PrimaryVideoFrameNumber = -1;
 
             if (item_object.contains("AimVideoFrameNumber") && item_object["AimVideoFrameNumber"].toInt())
@@ -138,19 +139,15 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
     {
         statusBar()->showMessage(tr("Mouse Right Button Pressed:") + str);
     }
-    else if (e->button() == Qt::MidButton)
-    {
-        statusBar()->showMessage(tr("Mouse Middle Button Pressed:") + str);
-    }
 }
-void MainWindow::mouseReleaseEvent(QMouseEvent *e) / release
+void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
 {
-    QPoint Point = e->pos();
-    int X = Point->x();
-    int Y = Point->y();
-    QString str = "(" + QString::number(e->x()) + "," + QString::number(e->y()) + ")";
+    QPoint p;
+    int X = p.x();
+    int Y = p.y();
+    QString str = "(" + QString::number(p.x()) + "," + QString::number(p.y()) + ")";
     statusBar()->showMessage(tr("Mouser Released:") + str, 3000);
-    if (m_imageArray[m_currentindex]->qsUrl != NULL)
+    if (ImageArray[m_currentindex]->qsUrl != NULL)
     {
         // int left=;
         // int right=;
@@ -163,37 +160,37 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *e) / release
         }
     }
 }
-int MainWindow::addImage(QString imagePath, QString url /*= NULL*/)
+int MainWindow::LoadImage(QString imagePath, QString url /*= NULL*/)
 {
     MainImage *img = new MainImage;
-    img->iId = g_imageid;
-    g_imageid++;
+    img->iId = imageid;
+    imageid++;
     img->qsImagePath = imagePath;
     img->qsUrl = url;
-    m_imageArray.push_back(img);
+    ImageArray.push_back(img);
     return img->iId;
 }
-void ScrollImageWidget::startTimer()
+void MainWindow::UpdateTimer()
 {
-    m_timerswitch->stop();
-    m_timerswitch->start(m_waitingtime);
+    Timerswitch->stop();
+    Timerswitch->start(m_waitingtime);
 }
 void MainWindow::OnTimerSwitch()
 {
     QPixmap nextimg;
     m_currentindex++;
-    if (m_currentindex >= m_imageArray.size())
+    if (m_currentindex >= ImageArray.size())
     {
         //QImage image(data,width,height,每行字节数,QImage::Format_RGB888);
         //nextimg=QPixmap::fromImage(image);
         //ui->Video->setPixmap(QPixmap::fromImage(image));
-        nextimg.load(m_imageArray[0]->qsImagePath);
+        nextimg.load(ImageArray[0]->qsImagePath);
     }
     else
     {
-        nextimg.load(m_imageArray[m_currentindex]->qsImagePath);
+        nextimg.load(ImageArray[m_currentindex]->qsImagePath);
     }
-    this->startTimer();
+    this->UpdateTimer();
 }
 void MainWindow::on_LoadVideoButton_clicked()
 {
@@ -250,4 +247,10 @@ void MainWindow::on_PlayButton_clicked(bool checked)
 void MainWindow::setPosition(int position)
 {
     Sound->setPosition(position);
+}
+
+void MainWindow::Load()
+{
+    statusBar->showMessage(tr("Loading..."));
+
 }
