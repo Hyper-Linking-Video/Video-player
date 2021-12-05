@@ -26,29 +26,21 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     this->setWindowTitle("Window1");
-    ui->PlayButton->setEnabled(false);
-    ui->PauseButton->setEnabled(false);
+    //ui->PlayButton->setEnabled(false);
+    //ui->PauseButton->setEnabled(false);
     //Cursor check
     setCursor(Qt::CrossCursor);
-    labelStatus = new QLabel();
-    labelStatus->setMinimumSize(300, 20);
-    labelStatus->setFrameShape(QFrame::WinPanel);
-    labelStatus->setFrameShadow(QFrame::Sunken);
-    labelStatus->setText(tr("Mouse Position:"));
-    labelStatus->setFixedWidth(100);
-    labelMousePos = new QLabel();
-    labelMousePos->setText(tr(""));
-    labelMousePos->setFixedWidth(100);
-    statusBar()->addPermanentWidget(labelStatus);
-    statusBar()->addPermanentWidget(labelMousePos);
+    ui->label_statue->setText("");
+    ui->label_X->setText("X: ");
+    ui->label_Y->setText("Y: ");
     this->setMouseTracking(true);
-    connect(this->ui->listWidget, SIGNAL(clicked(bool)), this, SLOT(mouseReleaseEvent(QMouseEvent * e)));
-    //image
-    m_currentindex = 0;
-    Timerswitch = new QTimer(this);
-    Timerswitch->setSingleShot(true);
-    //QTimer::singleShot(m_waitingtime, this,SLOT(OnTimerSwitch()));
-    connect(Timerswitch, SIGNAL(timeout()), this, SLOT(OnTimerSwitch()));
+//    connect(this->ui->listWidget, SIGNAL(clicked(bool)), this, SLOT(mouseReleaseEvent(QMouseEvent * e)));
+//    //image
+//    m_currentindex = 0;
+//    Timerswitch = new QTimer(this);
+//    Timerswitch->setSingleShot(true);
+//    //QTimer::singleShot(m_waitingtime, this,SLOT(OnTimerSwitch()));
+//    connect(Timerswitch, SIGNAL(timeout()), this, SLOT(OnTimerSwitch()));
 }
 
 MainWindow::~MainWindow()
@@ -134,7 +126,8 @@ bool MainWindow::getSecondData(const QString &data_path)
 void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
     QPoint p = event->pos(); //Cursor position
-    labelMousePos->setText("(" + QString::number(p.x()) + "," + QString::number(p.y()) + ")");
+    ui->label_X->setText("X: "+QString::number(p.x()));
+    ui->label_Y->setText("Y: "+QString::number(p.y()));
 }
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
@@ -142,11 +135,15 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
     QString str = "(" + QString::number(p.x()) + "," + QString::number(p.y()) + ")";
     if (event->button() == Qt::LeftButton)
     {
-        statusBar()->showMessage(tr("Mouse Left Button Pressed:") + str);
+        ui->label_statue->setText("Left Button Pressed");
+        ui->label_X->setText("X: "+QString::number(p.x()));
+        ui->label_Y->setText("Y: "+QString::number(p.y()));
     }
     else if (event->button() == Qt::RightButton)
     {
-        statusBar()->showMessage(tr("Mouse Right Button Pressed:") + str);
+        ui->label_statue->setText("Right Button Pressed");
+        ui->label_X->setText("X: "+QString::number(p.x()));
+        ui->label_Y->setText("Y: "+QString::number(p.y()));
     }
 }
 void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
@@ -154,20 +151,21 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
     QPoint p=event->pos();
     int X = p.x();
     int Y = p.y();
-    QString str = "(" + QString::number(X) + "," + QString::number(Y) + ")";
-    statusBar()->showMessage(tr("Mouser Released:") + str, 3000);
-    if (!ImageArray[m_currentindex]->qsUrl.isNull())
-    {
-        int left=1;
-        int right=1;
-        int top=1;
-        int bottom=1;
-        if (X > left && X < right && Y < top && Y > bottom)
-        {
-            //LoadImage
-            UpdateTimer();
-        }
-    }
+    ui->label_statue->setText("Mouse Released");
+    ui->label_X->setText("X: "+QString::number(X));
+    ui->label_Y->setText("Y: "+QString::number(Y));
+//    if (!ImageArray[m_currentindex]->qsUrl.isNull())
+//    {
+//        int left=1;
+//        int right=1;
+//        int top=1;
+//        int bottom=1;
+//        if (X > left && X < right && Y < top && Y > bottom)
+//        {
+//            //LoadImage
+//            UpdateTimer();
+//        }
+//    }
 }
 int MainWindow::LoadImage(QString imagePath, QString url /*= NULL*/)
 {
@@ -200,7 +198,7 @@ void MainWindow::OnTimerSwitch()
         nextimg.load(ImageArray[m_currentindex]->qsImagePath);
     }
     this->UpdateTimer();
-}
+}/*
 void MainWindow::on_LoadVideoButton_clicked()
 {
     QString dir_name = QFileDialog::getExistingDirectory(NULL, "Please choose the directory with the primary video's frame files", ".");
@@ -262,4 +260,4 @@ void MainWindow::Load()
 {
     statusBar->showMessage(tr("Loading..."));
 
-}
+}*/

@@ -43,11 +43,12 @@ public:
     void switchToImg(int index);
 
 private slots:
-    void on_LoadVideoButton_clicked();
-    void on_PlayButton_clicked(bool checked);
+    //void on_LoadVideoButton_clicked();
+    //void on_PlayButton_clicked(bool checked);
     void mouseReleaseEvent(QMouseEvent *e);
     void UpdateTimer();
     void OnTimerSwitch();
+    bool getSecondData(const QString &data_path);
 
 protected:
     void mouseMoveEvent(QMouseEvent *e);
