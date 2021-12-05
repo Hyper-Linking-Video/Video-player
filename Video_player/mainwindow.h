@@ -15,6 +15,16 @@ struct MainImage
     QString qsUrl;//second info
 };
 
+struct SecondImage
+{
+    int AimVideoFrameNumber;
+    int PrimaryVideoFrameNumber;
+    int BottomRightPointX;
+    int BottomRightPointY;
+    int TopLeftPointX;
+    int TopLeftPointY;
+};
+
 QT_BEGIN_NAMESPACE
 namespace Ui
 {
@@ -37,7 +47,7 @@ private slots:
     void on_PlayButton_clicked(bool checked);
     void mouseReleaseEvent(QMouseEvent *e);
     void UpdateTimer();
-    void MainWindow::OnTimerSwitch();
+    void OnTimerSwitch();
 
 protected:
     void mouseMoveEvent(QMouseEvent *e);

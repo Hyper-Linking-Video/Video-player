@@ -42,7 +42,7 @@ MainWindow::MainWindow(QWidget *parent)
     statusBar()->addPermanentWidget(labelStatus);
     statusBar()->addPermanentWidget(labelMousePos);
     this->setMouseTracking(true);
-    connect(this->ui->net_set, SIGNAL(clicked(bool)), this, SLOT(mouseReleaseEvent(QMouseEvent * e)));
+    connect(this->ui->listWidget, SIGNAL(clicked(bool)), this, SLOT(mouseReleaseEvent(QMouseEvent * e)));
     //image
     m_currentindex = 0;
     Timerswitch = new QTimer(this);
@@ -55,7 +55,7 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
-bool MainWindow::getSecondData(QScatterSeries *series,const QString &data_path)
+bool MainWindow::getSecondData(const QString &data_path)
 {
     QFile load_file(data_path);
     if (!load_file.open(QFile::ReadOnly))
@@ -111,8 +111,16 @@ bool MainWindow::getSecondData(QScatterSeries *series,const QString &data_path)
             {
                 BottomRightPointY = item_object["BottomRightPointY"].toInt();
             }
-            if (BottomRightPointX >= TopLeftPointX || BottomRightPointY >= TopLeftPointY || PrimaryVideoFrameNumber < 0 || AimVideoFrameNumber < 0)
-                series->append(AimVideoFrameNumber, PrimaryVideoFrameNumber, BottomRightPointX, BottomRightPointY, TopLeftPointX, TopLeftPointY);
+            if (BottomRightPointX >= TopLeftPointX || BottomRightPointY >= TopLeftPointY || PrimaryVideoFrameNumber < 0 || AimVideoFrameNumber < 0){
+                SecondImage *img = new SecondImage;
+                img->AimVideoFrameNumber=AimVideoFrameNumber;
+                img->PrimaryVideoFrameNumber=PrimaryVideoFrameNumber;
+                img->BottomRightPointX=BottomRightPointX;
+                img->BottomRightPointY=BottomRightPointY;
+                img->TopLeftPointX=TopLeftPointX;
+                img->TopLeftPointY=TopLeftPointY;
+            }
+
             else
             {
                 qWarning("data read error");
@@ -123,40 +131,41 @@ bool MainWindow::getSecondData(QScatterSeries *series,const QString &data_path)
 
     return true;
 }
-void MainWindow::mouseMoveEvent(QMouseEvent *e)
+void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
-    QPoint LeftTopPoint = e->pos(); //Cursor position
-    labelMousePos->setText("(" + QString::number(LeftTopPoint.x()) + "," + QString::number(LeftTopPoint.y()) + ")");
+    QPoint p = event->pos(); //Cursor position
+    labelMousePos->setText("(" + QString::number(p.x()) + "," + QString::number(p.y()) + ")");
 }
-void MainWindow::mousePressEvent(QMouseEvent *e)
+void MainWindow::mousePressEvent(QMouseEvent *event)
 {
-    QString str = "(" + QString::number(e->x()) + "," + QString::number(e->y()) + ")";
-    if (e->button() == Qt::LeftButton)
+    QPoint p = event->pos(); //Cursor position
+    QString str = "(" + QString::number(p.x()) + "," + QString::number(p.y()) + ")";
+    if (event->button() == Qt::LeftButton)
     {
         statusBar()->showMessage(tr("Mouse Left Button Pressed:") + str);
     }
-    else if (e->button() == Qt::RightButton)
+    else if (event->button() == Qt::RightButton)
     {
         statusBar()->showMessage(tr("Mouse Right Button Pressed:") + str);
     }
 }
 void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
 {
-    QPoint p;
+    QPoint p=event->pos();
     int X = p.x();
     int Y = p.y();
-    QString str = "(" + QString::number(p.x()) + "," + QString::number(p.y()) + ")";
+    QString str = "(" + QString::number(X) + "," + QString::number(Y) + ")";
     statusBar()->showMessage(tr("Mouser Released:") + str, 3000);
-    if (ImageArray[m_currentindex]->qsUrl != NULL)
+    if (!ImageArray[m_currentindex]->qsUrl.isNull())
     {
-        // int left=;
-        // int right=;
-        // int top=;
-        // int bottom=;
+        int left=1;
+        int right=1;
+        int top=1;
+        int bottom=1;
         if (X > left && X < right && Y < top && Y > bottom)
         {
-            net_set_ui Second; //link found,jump to another one
-            Second.exec();
+            //LoadImage
+            UpdateTimer();
         }
     }
 }
@@ -244,9 +253,9 @@ void MainWindow::on_PlayButton_clicked(bool checked)
     player->play();
 }
 
-void MainWindow::setPosition(int position)
+void MainWindow::SetPosition(int position)
 {
-    Sound->setPosition(position);
+    Sound.setPosition(position);
 }
 
 void MainWindow::Load()
