@@ -64,7 +64,7 @@ private:
     QMediaPlayer *SoundPlayer;
     QAudioOutput *audioOutput;
     QTimer* Timerswitch;
-    int m_waitingtime=333;
+    int m_waitingtime=13; // faster than thought
     std::unordered_map<int, MainImage *> ImageArray;
     std::vector<SecondImage *> JsonArray;
     int CurrentId;

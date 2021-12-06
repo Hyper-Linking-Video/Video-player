@@ -9,6 +9,7 @@
 #include <QJsonArray>
 #include <QJsonParseError>
 #include <QTimer>
+#include <algorithm>
 
 //MyImage VideoFrame[9000];
 
@@ -30,13 +31,13 @@ MainWindow::MainWindow(QWidget *parent)
     ui->label_X->setText("X: ");
     ui->label_Y->setText("Y: ");
     this->setMouseTracking(true);
-//    connect(this->ui->listWidget, SIGNAL(clicked(bool)), this, SLOT(mouseReleaseEvent(QMouseEvent * e)));
-//    //image
-//    m_currentindex = 0;
-//    Timerswitch = new QTimer(this);
-//    Timerswitch->setSingleShot(true);
-//    //QTimer::singleShot(m_waitingtime, this,SLOT(OnTimerSwitch()));
-//    connect(Timerswitch, SIGNAL(timeout()), this, SLOT(OnTimerSwitch()));
+    connect(this->ui->Video, SIGNAL(clicked(bool)), this, SLOT(mouseReleaseEvent(QMouseEvent * e)));
+    //image
+    CurrentId = 0;
+    Timerswitch = new QTimer(this);
+    Timerswitch->setSingleShot(true);
+    //QTimer::singleShot(m_waitingtime, this,SLOT(OnTimerSwitch()));
+    connect(Timerswitch, SIGNAL(timeout()), this, SLOT(OnTimerSwitch()));
 }
 
 MainWindow::~MainWindow()
@@ -175,8 +176,8 @@ void MainWindow::LoadImage(int imageid,QString imagePath)
 }
 void MainWindow::AddLink(){
     for(auto info:JsonArray){
-        auto index=std::find(ImageArray.begin(),ImageArray.end(),info->PrimaryVideoFrameNumber);
-        if(index!=ImageArray.end()){
+        auto got = ImageArray.find(info->PrimaryVideoFrameNumber);
+        if(got!=ImageArray.end()){
             ImageArray[info->PrimaryVideoFrameNumber]->qsUrl.push_back(info->AimVideoFrameNumber);
             ImageArray[info->PrimaryVideoFrameNumber]->qsUrl.push_back(info->TopLeftPointX);
             ImageArray[info->PrimaryVideoFrameNumber]->qsUrl.push_back(info->TopLeftPointY);
@@ -199,25 +200,21 @@ void MainWindow::OnTimerSwitch()
         //QImage image(data,width,height,每行字节数,QImage::Format_RGB888);
         //nextimg=QPixmap::fromImage(image);
         //ui->Video->setPixmap(QPixmap::fromImage(image));
-        nextimg.load(ImageArray[0]->qsImagePath);
+        //nextimg.load(ImageArray[0]->qsImagePath);
     }
     else
     {
-        if(ui->PlayButton->isEnabled()){
+        if(ui->PauseButton->isEnabled()){
             ShowImage();
         }
-        nextimg.load(ImageArray[CurrentId]->qsImagePath);
+        //nextimg.load(ImageArray[CurrentId]->qsImagePath);
     }
     this->UpdateTimer();
 }
 
-void MainWindow::on_PauseButton_clicked(bool checked)
-{
-    Timerswitch->stop();
-    SoundPlayer->stop();
-}
 void MainWindow::on_LoadVideoButton_clicked()
 {
+    statusBar()->showMessage(tr("Loading"));
     QString dir_name = QFileDialog::getExistingDirectory(NULL, "Please choose the directory with the primary video's frame files", ".");
     qDebug() << "Dir Path:" << dir_name;
     if (dir_name.size() > 0)
@@ -236,7 +233,7 @@ void MainWindow::on_LoadVideoButton_clicked()
 
             return;
         }
-        getSecondData(data_path);
+        //getSecondData(data_path);
 
         for (int i = 0; i < fileCount; i++)
         {
@@ -247,7 +244,7 @@ void MainWindow::on_LoadVideoButton_clicked()
         SoundPlayer = new QMediaPlayer;
         audioOutput = new QAudioOutput;
         SoundPlayer->setAudioOutput(audioOutput);
-        QDir *videoPath = new QDir(VideoPath);
+        QDir *videoPath = new QDir(dir_name);
         QStringList wavfilter;
         wavfilter << "*.wav";
         videoPath->setNameFilters(wavfilter);
@@ -258,6 +255,8 @@ void MainWindow::on_LoadVideoButton_clicked()
         audioOutput->setVolume(50);
 
         ui->PlayButton->setEnabled(true);
+        statusBar()->showMessage(tr("Done"));
+        ShowImage();
     }
 }
 void MainWindow::ShowImage(){
@@ -278,8 +277,17 @@ void MainWindow::on_PlayButton_clicked(bool checked)
 {
     SoundPlayer->play();
     Timerswitch->start();
+    ui->PauseButton->setEnabled(true);
+    ui->PlayButton->setEnabled(false);
 }
 
+void MainWindow::on_PauseButton_clicked(bool checked)
+{
+    Timerswitch->stop();
+    SoundPlayer->stop();
+    ui->PlayButton->setEnabled(true);
+    ui->PauseButton->setEnabled(false);
+}
 void MainWindow::on_verticalSlider_valueChanged(int value)
 {
     audioOutput->setVolume(value);
