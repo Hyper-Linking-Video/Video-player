@@ -53,9 +53,7 @@ private slots:
     void on_LoadVideoButton_clicked();
     void on_PlayButton_clicked(bool checked);
     void on_verticalSlider_valueChanged(int value);
-    void ShowImage()
-
-    void on_verticalSlider_valueChanged(int value);
+    void ShowImage();
 
 protected:
     void mouseMoveEvent(QMouseEvent *e);

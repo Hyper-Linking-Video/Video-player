@@ -12,10 +12,6 @@
 
 //MyImage VideoFrame[9000];
 
-//load json first
-//create MainImage, for each second video infomation, add the url to image(index)
-//add the path to image(index)
-//
 //load image(play video),play sound
 //if click,check url,check cursor location
 //if have url and in the boundaries, jump to the second video
@@ -109,9 +105,9 @@ bool MainWindow::getSecondData(const QString &data_path)
     }
     QJsonObject echo_info = json_doc.object();
 
-    if (echo_info.contains("echo_information") && echo_info["echo_information"].isArray())
+    if (echo_info.contains("Links") && echo_info["Links"].isArray())
     {
-        QJsonArray info_array = echo_info["echo_information"].toArray();
+        QJsonArray info_array = echo_info["Links"].toArray();
         for (int i = 0; i < info_array.size(); i++)
         {
             QJsonObject item_object = info_array[i].toObject();
@@ -207,8 +203,7 @@ void MainWindow::OnTimerSwitch()
     else
     {
         if(ui->PlayButton->isEnabled()){
-            MyImage VideoFrame;
-
+            ShowImage();
         }
         nextimg.load(ImageArray[CurrentId]->qsImagePath);
     }
@@ -263,7 +258,7 @@ void MainWindow::ShowImage(){
 void MainWindow::on_PlayButton_clicked(bool checked)
 {
     //ui->PlayButton->setEnabled(false);
-
+    ShowImage();
     //audio
     SoundPlayer = new QMediaPlayer;
     audioOutput = new QAudioOutput;
