@@ -74,18 +74,19 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
     ui->label_statue->setText("Mouse Released");
     ui->label_X->setText("X: "+QString::number(X));
     ui->label_Y->setText("Y: "+QString::number(Y));
-//    if (!ImageArray[m_currentindex]->qsUrl.isNull())
-//    {
-//        int left=1;
-//        int right=1;
-//        int top=1;
-//        int bottom=1;
-//        if (X > left && X < right && Y < top && Y > bottom)
-//        {
-//            //LoadImage
-//            UpdateTimer();
-//        }
-//    }
+    if (ImageArray[CurrentId]->qsUrl.size()!=0)
+    {
+        int left=ImageArray[CurrentId]->qsUrl[2];
+        int right=ImageArray[CurrentId]->qsUrl[4];
+        int top=ImageArray[CurrentId]->qsUrl[1];
+        int bottom=ImageArray[CurrentId]->qsUrl[3];
+        if (X > left && X < right && Y < top && Y > bottom)
+        {
+            //LoadImage
+            ui->label_statue->setText("Next Video");
+            UpdateTimer();
+        }
+    }
 }
 bool MainWindow::getSecondData(const QString &data_path)
 {
@@ -210,6 +211,11 @@ void MainWindow::OnTimerSwitch()
     this->UpdateTimer();
 }
 
+void MainWindow::on_PauseButton_clicked(bool checked)
+{
+    Timerswitch->stop();
+    SoundPlayer->stop();
+}
 void MainWindow::on_LoadVideoButton_clicked()
 {
     QString dir_name = QFileDialog::getExistingDirectory(NULL, "Please choose the directory with the primary video's frame files", ".");
@@ -238,6 +244,19 @@ void MainWindow::on_LoadVideoButton_clicked()
             LoadImage(i,imagePath);
         }
         AddLink();
+        SoundPlayer = new QMediaPlayer;
+        audioOutput = new QAudioOutput;
+        SoundPlayer->setAudioOutput(audioOutput);
+        QDir *videoPath = new QDir(VideoPath);
+        QStringList wavfilter;
+        wavfilter << "*.wav";
+        videoPath->setNameFilters(wavfilter);
+        QList<QFileInfo> *wavfile = new QList<QFileInfo>(videoPath->entryInfoList(wavfilter));
+        QString filepath = wavfile->at(0).filePath();
+        qDebug() << filepath;
+        SoundPlayer->setSource(QUrl::fromLocalFile(wavfile->at(0).filePath()));
+        audioOutput->setVolume(50);
+
         ui->PlayButton->setEnabled(true);
     }
 }
@@ -257,23 +276,8 @@ void MainWindow::ShowImage(){
 }
 void MainWindow::on_PlayButton_clicked(bool checked)
 {
-    //ui->PlayButton->setEnabled(false);
-    ShowImage();
-    //audio
-    SoundPlayer = new QMediaPlayer;
-    audioOutput = new QAudioOutput;
-    SoundPlayer->setAudioOutput(audioOutput);
-    QDir *videoPath = new QDir(VideoPath);
-    QStringList wavfilter;
-    wavfilter << "*.wav";
-    videoPath->setNameFilters(wavfilter);
-    QList<QFileInfo> *wavfile = new QList<QFileInfo>(videoPath->entryInfoList(wavfilter));
-    QString filepath = wavfile->at(0).filePath();
-    qDebug() << filepath;
-    SoundPlayer->setSource(QUrl::fromLocalFile(wavfile->at(0).filePath()));
-
-    audioOutput->setVolume(50);
     SoundPlayer->play();
+    Timerswitch->start();
 }
 
 void MainWindow::on_verticalSlider_valueChanged(int value)
@@ -342,5 +346,3 @@ void MainWindow::on_PlayButton_clicked(bool checked)
     player->play();
 }
 */
-
-

@@ -42,7 +42,6 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void LoadImage(int imageid,QString imagePath);
-    void switchToImg(int index);
 
 private slots:
     void mouseReleaseEvent(QMouseEvent *e);
@@ -50,10 +49,11 @@ private slots:
     void OnTimerSwitch();
     bool getSecondData(const QString &data_path);
     void AddLink();
+    void ShowImage();
     void on_LoadVideoButton_clicked();
     void on_PlayButton_clicked(bool checked);
     void on_verticalSlider_valueChanged(int value);
-    void ShowImage();
+    void on_PauseButton_clicked(bool checked);
 
 protected:
     void mouseMoveEvent(QMouseEvent *e);
