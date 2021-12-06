@@ -10,7 +10,7 @@
 #include <QJsonParseError>
 #include <QTimer>
 
-MyImage VideoFrame[9000];
+//MyImage VideoFrame[9000];
 
 //load json first
 //create MainImage, for each second video infomation, add the url to image(index)
@@ -26,8 +26,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     this->setWindowTitle("Window1");
-    //ui->PlayButton->setEnabled(false);
-    //ui->PauseButton->setEnabled(false);
+    ui->PlayButton->setEnabled(false);
+    ui->PauseButton->setEnabled(false);
     //Cursor check
     setCursor(Qt::CrossCursor);
     ui->label_statue->setText("");
@@ -46,6 +46,50 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+void MainWindow::mouseMoveEvent(QMouseEvent *event)
+{
+    QPoint p = event->pos(); //Cursor position
+    ui->label_X->setText("X: "+QString::number(p.x()-1));
+    ui->label_Y->setText("Y: "+QString::number(p.y()-47));
+}
+void MainWindow::mousePressEvent(QMouseEvent *event)
+{
+    QPoint p = event->pos(); //Cursor position
+    QString str = "(" + QString::number(p.x()) + "," + QString::number(p.y()) + ")";
+    if (event->button() == Qt::LeftButton)
+    {
+        ui->label_statue->setText("Left Button Pressed");
+        ui->label_X->setText("X: "+QString::number(p.x()));
+        ui->label_Y->setText("Y: "+QString::number(p.y()));
+    }
+    else if (event->button() == Qt::RightButton)
+    {
+        ui->label_statue->setText("Right Button Pressed");
+        ui->label_X->setText("X: "+QString::number(p.x()));
+        ui->label_Y->setText("Y: "+QString::number(p.y()));
+    }
+}
+void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
+{
+    QPoint p=event->pos();
+    int X = p.x();
+    int Y = p.y();
+    ui->label_statue->setText("Mouse Released");
+    ui->label_X->setText("X: "+QString::number(X));
+    ui->label_Y->setText("Y: "+QString::number(Y));
+//    if (!ImageArray[m_currentindex]->qsUrl.isNull())
+//    {
+//        int left=1;
+//        int right=1;
+//        int top=1;
+//        int bottom=1;
+//        if (X > left && X < right && Y < top && Y > bottom)
+//        {
+//            //LoadImage
+//            UpdateTimer();
+//        }
+//    }
 }
 bool MainWindow::getSecondData(const QString &data_path)
 {
@@ -111,8 +155,8 @@ bool MainWindow::getSecondData(const QString &data_path)
                 img->BottomRightPointY=BottomRightPointY;
                 img->TopLeftPointX=TopLeftPointX;
                 img->TopLeftPointY=TopLeftPointY;
+                JsonArray.push_back(img);
             }
-
             else
             {
                 qWarning("data read error");
@@ -123,59 +167,26 @@ bool MainWindow::getSecondData(const QString &data_path)
 
     return true;
 }
-void MainWindow::mouseMoveEvent(QMouseEvent *event)
-{
-    QPoint p = event->pos(); //Cursor position
-    ui->label_X->setText("X: "+QString::number(p.x()));
-    ui->label_Y->setText("Y: "+QString::number(p.y()));
-}
-void MainWindow::mousePressEvent(QMouseEvent *event)
-{
-    QPoint p = event->pos(); //Cursor position
-    QString str = "(" + QString::number(p.x()) + "," + QString::number(p.y()) + ")";
-    if (event->button() == Qt::LeftButton)
-    {
-        ui->label_statue->setText("Left Button Pressed");
-        ui->label_X->setText("X: "+QString::number(p.x()));
-        ui->label_Y->setText("Y: "+QString::number(p.y()));
-    }
-    else if (event->button() == Qt::RightButton)
-    {
-        ui->label_statue->setText("Right Button Pressed");
-        ui->label_X->setText("X: "+QString::number(p.x()));
-        ui->label_Y->setText("Y: "+QString::number(p.y()));
-    }
-}
-void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
-{
-    QPoint p=event->pos();
-    int X = p.x();
-    int Y = p.y();
-    ui->label_statue->setText("Mouse Released");
-    ui->label_X->setText("X: "+QString::number(X));
-    ui->label_Y->setText("Y: "+QString::number(Y));
-//    if (!ImageArray[m_currentindex]->qsUrl.isNull())
-//    {
-//        int left=1;
-//        int right=1;
-//        int top=1;
-//        int bottom=1;
-//        if (X > left && X < right && Y < top && Y > bottom)
-//        {
-//            //LoadImage
-//            UpdateTimer();
-//        }
-//    }
-}
-int MainWindow::LoadImage(QString imagePath, QString url /*= NULL*/)
+
+void MainWindow::LoadImage(int imageid,QString imagePath)
 {
     MainImage *img = new MainImage;
     img->iId = imageid;
-    imageid++;
     img->qsImagePath = imagePath;
-    img->qsUrl = url;
-    ImageArray.push_back(img);
-    return img->iId;
+    ImageArray[imageid]=img;
+    return;
+}
+void MainWindow::AddLink(){
+    for(auto info:JsonArray){
+        auto index=std::find(ImageArray.begin(),ImageArray.end(),info->PrimaryVideoFrameNumber);
+        if(index!=ImageArray.end()){
+            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl.push_back(info->AimVideoFrameNumber);
+            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl.push_back(info->TopLeftPointX);
+            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl.push_back(info->TopLeftPointY);
+            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl.push_back(info->BottomRightPointX);
+            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl.push_back(info->BottomRightPointY);
+        }
+    }
 }
 void MainWindow::UpdateTimer()
 {
@@ -185,8 +196,8 @@ void MainWindow::UpdateTimer()
 void MainWindow::OnTimerSwitch()
 {
     QPixmap nextimg;
-    m_currentindex++;
-    if (m_currentindex >= ImageArray.size())
+    CurrentId++;
+    if (CurrentId >= ImageArray.size())
     {
         //QImage image(data,width,height,每行字节数,QImage::Format_RGB888);
         //nextimg=QPixmap::fromImage(image);
@@ -195,10 +206,86 @@ void MainWindow::OnTimerSwitch()
     }
     else
     {
-        nextimg.load(ImageArray[m_currentindex]->qsImagePath);
+        if(ui->PlayButton->isEnabled()){
+            MyImage VideoFrame;
+
+        }
+        nextimg.load(ImageArray[CurrentId]->qsImagePath);
     }
     this->UpdateTimer();
-}/*
+}
+
+void MainWindow::on_LoadVideoButton_clicked()
+{
+    QString dir_name = QFileDialog::getExistingDirectory(NULL, "Please choose the directory with the primary video's frame files", ".");
+    qDebug() << "Dir Path:" << dir_name;
+    if (dir_name.size() > 0)
+    {
+        QDir *inputDir = new QDir(dir_name);
+        QStringList filter;
+        filter << "*.rgb";
+        inputDir->setNameFilters(filter);
+        QList<QFileInfo> *fileInfo = new QList<QFileInfo>(inputDir->entryInfoList(filter));
+        int fileCount = fileInfo->count();
+        qDebug() << fileCount;
+
+        if (fileCount < 9000)
+        {
+            QMessageBox::warning(this, tr("Error!"), tr("The frame files in this directory are not enough to generate a video. Please choose another directory."));
+
+            return;
+        }
+        getSecondData(data_path);
+
+        for (int i = 0; i < fileCount; i++)
+        {
+            QString imagePath = fileInfo->at(i).filePath();
+            LoadImage(i,imagePath);
+        }
+        AddLink();
+        ui->PlayButton->setEnabled(true);
+    }
+}
+void MainWindow::ShowImage(){
+    MyImage VideoFrame;
+    VideoFrame.setWidth(352);
+    VideoFrame.setHeight(288);
+    auto pathTemp=ImageArray[CurrentId]->qsImagePath.toLatin1();
+    VideoFrame.setImagePath(pathTemp.data());
+    unsigned char *VideoFrameTemp = new unsigned char[3 * 352 * 288]();
+    VideoFrame.ReadImage();
+    VideoFrame.setFlag();
+    VideoFrameTemp = (unsigned char *)VideoFrame.getImageData();
+    QImage *tempImage = new QImage(VideoFrameTemp, 352, 288, QImage::Format_RGB888);
+    ui->Video->setAlignment(Qt::AlignCenter);
+    ui->Video->setPixmap(QPixmap::fromImage(*tempImage));
+}
+void MainWindow::on_PlayButton_clicked(bool checked)
+{
+    //ui->PlayButton->setEnabled(false);
+
+    //audio
+    SoundPlayer = new QMediaPlayer;
+    audioOutput = new QAudioOutput;
+    SoundPlayer->setAudioOutput(audioOutput);
+    QDir *videoPath = new QDir(VideoPath);
+    QStringList wavfilter;
+    wavfilter << "*.wav";
+    videoPath->setNameFilters(wavfilter);
+    QList<QFileInfo> *wavfile = new QList<QFileInfo>(videoPath->entryInfoList(wavfilter));
+    QString filepath = wavfile->at(0).filePath();
+    qDebug() << filepath;
+    SoundPlayer->setSource(QUrl::fromLocalFile(wavfile->at(0).filePath()));
+
+    audioOutput->setVolume(50);
+    SoundPlayer->play();
+}
+
+void MainWindow::on_verticalSlider_valueChanged(int value)
+{
+    audioOutput->setVolume(value);
+}
+/*
 void MainWindow::on_LoadVideoButton_clicked()
 {
     QString dir_name = QFileDialog::getExistingDirectory(NULL, "Please choose the directory with the primary video's frame files", ".");
@@ -244,11 +331,9 @@ void MainWindow::on_PlayButton_clicked(bool checked)
 {
     ui->PlayButton->setEnabled(false);
     ui->PauseButton->setEnabled(false);
-    QAudioOutput *audioOutput = new QAudioOutput;
     player = new QMediaPlayer;
     audioOutput = new QAudioOutput;
     player->setAudioOutput(audioOutput);
-    player->setSource(QUrl::fromLocalFile("E://AIFilmOne//AIFilmOne.wav"));
     QDir *videoPath = new QDir(VideoPath);
     QStringList wavfilter;
     wavfilter << "*.wav";
@@ -261,14 +346,6 @@ void MainWindow::on_PlayButton_clicked(bool checked)
     audioOutput->setVolume(50);
     player->play();
 }
+*/
 
-void MainWindow::SetPosition(int position)
-{
-    Sound.setPosition(position);
-}
 
-void MainWindow::Load()
-{
-    statusBar->showMessage(tr("Loading..."));
-
-}*/

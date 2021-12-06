@@ -7,22 +7,24 @@
 #include <QLabel>
 #include <QMediaPlayer>
 #include <vector>
+#include <unordered_map>
+
+struct SecondImage
+{
+    int PrimaryVideoFrameNumber;
+    int AimVideoFrameNumber;
+    int index;
+    int BottomRightPointX;
+    int BottomRightPointY;
+    int TopLeftPointX;
+    int TopLeftPointY;
+};
 
 struct MainImage
 {
     int iId;
     QString qsImagePath;
-    QString qsUrl;//second info
-};
-
-struct SecondImage
-{
-    int AimVideoFrameNumber;
-    int PrimaryVideoFrameNumber;
-    int BottomRightPointX;
-    int BottomRightPointY;
-    int TopLeftPointX;
-    int TopLeftPointY;
+    std::vector<int> qsUrl;//second info
 };
 
 QT_BEGIN_NAMESPACE
@@ -39,16 +41,21 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    int LoadImage(QString imagePath, QString url = NULL);
+    void LoadImage(int imageid,QString imagePath);
     void switchToImg(int index);
 
 private slots:
-    //void on_LoadVideoButton_clicked();
-    //void on_PlayButton_clicked(bool checked);
     void mouseReleaseEvent(QMouseEvent *e);
     void UpdateTimer();
     void OnTimerSwitch();
     bool getSecondData(const QString &data_path);
+    void AddLink();
+    void on_LoadVideoButton_clicked();
+    void on_PlayButton_clicked(bool checked);
+    void on_verticalSlider_valueChanged(int value);
+    void ShowImage()
+
+    void on_verticalSlider_valueChanged(int value);
 
 protected:
     void mouseMoveEvent(QMouseEvent *e);
@@ -56,14 +63,12 @@ protected:
 
 private:
     Ui::MainWindow *ui;
-    QLabel *labelStatus;
-    QLabel *labelMousePos;
-    QMediaPlayer *soundPlayer;
+    QMediaPlayer *SoundPlayer;
     QAudioOutput *audioOutput;
     QTimer* Timerswitch;
     int m_waitingtime=333;
-    int imageid;
-    std::vector<MainImage *> ImageArray;
-    int m_currentindex;
+    std::unordered_map<int, MainImage *> ImageArray;
+    std::vector<SecondImage *> JsonArray;
+    int CurrentId;
 };
 #endif // MAINWINDOW_H
