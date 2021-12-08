@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>382</width>
+    <width>532</width>
     <height>411</height>
    </rect>
   </property>
@@ -54,6 +54,13 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="RestartButton">
+         <property name="text">
+          <string>Restart</string>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="PlayButton">
@@ -140,7 +147,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label_Y">
+       <widget class="QLabel" name="label_X">
         <property name="text">
          <string>X</string>
         </property>
@@ -150,7 +157,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label_X">
+       <widget class="QLabel" name="label_Y">
         <property name="text">
          <string>Y</string>
         </property>
@@ -203,7 +210,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>382</width>
+     <width>532</width>
      <height>26</height>
     </rect>
    </property>

@@ -56,8 +56,10 @@ private slots:
     void on_PlayButton_clicked(bool checked);
     void on_verticalSlider_valueChanged(int value);
     void on_PauseButton_clicked(bool checked);
-    void LoadSecond(QString dir_name);
+    void LoadSecond(QString dir_name,int n);
     void Clear();
+
+    void on_RestartButton_clicked();
 
 protected:
     void mouseMoveEvent(QMouseEvent *e);

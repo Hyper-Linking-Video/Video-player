@@ -27,8 +27,8 @@ MainWindow::MainWindow(QWidget *parent)
     this->setWindowTitle("Window1");
     ui->PlayButton->setEnabled(false);
     ui->PauseButton->setEnabled(false);
+    ui->RestartButton->setEnabled(false);
     //Cursor check
-    setCursor(Qt::CrossCursor);
     ui->label_statue->setText("");
     ui->label_X->setText("X: ");
     ui->label_Y->setText("Y: ");
@@ -53,8 +53,8 @@ void MainWindow::UpdateTimer()
 }
 void MainWindow::OnTimerSwitch()
 {
-    QElapsedTimer timedebuge;
-    timedebuge.start();
+    //QElapsedTimer timedebuge;
+    //timedebuge.start();
     this->UpdateTimer();
     CurrentId++;
     if (CurrentId >= ImageArray.size())
@@ -75,7 +75,7 @@ void MainWindow::OnTimerSwitch()
         }
         //nextimg.load(ImageArray[CurrentId]->qsImagePath);
     }
-    qDebug()<<"show one image need: "<<timedebuge.elapsed()<<"ms";
+    //qDebug()<<"show one image need: "<<timedebuge.elapsed()<<"ms";
 }
 void MainWindow::ShowImage()
 {
@@ -94,6 +94,14 @@ void MainWindow::ShowImage()
     ui->Video->setAlignment(Qt::AlignCenter);
     ui->Video->setPixmap(QPixmap::fromImage(*tempImage));
     //qDebug()<<"show one image need: "<<timedebuge.elapsed()<<"ms";
+    if (ImageArray[CurrentId]->qsUrl.size() != 0){
+        statusBar()->showMessage(tr("Have Link Now"));
+        setCursor(Qt::CrossCursor);
+    }
+    else{
+        statusBar()->showMessage(tr("Wait"));
+        setCursor(Qt::ArrowCursor);
+    }
 }
 bool MainWindow::getSecondData(const QString &data_path)
 {
@@ -266,6 +274,8 @@ void MainWindow::on_LoadVideoButton_clicked()
         audioOutput->setVolume(50);
 
         ui->PlayButton->setEnabled(true);
+        ui->RestartButton->setEnabled(true);
+        ui->PauseButton->setEnabled(false);
         statusBar()->showMessage(tr("Done"));
         ShowImage();
     }
@@ -282,7 +292,7 @@ void MainWindow::on_PlayButton_clicked(bool checked)
 void MainWindow::on_PauseButton_clicked(bool checked)
 {
     Timerswitch->stop();
-    SoundPlayer->stop();
+    SoundPlayer->pause();
     ui->PlayButton->setEnabled(true);
     ui->PauseButton->setEnabled(false);
 }
@@ -294,11 +304,8 @@ void MainWindow::on_verticalSlider_valueChanged(int value)
 void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
     QPoint p = event->pos(); //Cursor position
-    ui->label_X->setText("X: " + QString::number(p.x() - 1));
-    ui->label_Y->setText("Y: " + QString::number(p.y() - 47));
-    if (ImageArray[CurrentId]->qsUrl.size() != 0){
-        statusBar()->showMessage(tr("Have Link Now"));
-    }
+    ui->label_X->setText("X: " + QString::number(p.x() ));
+    ui->label_Y->setText("Y: " + QString::number(p.y() ));
 }
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
@@ -336,7 +343,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
             {
                 //LoadImage
                 ui->label_statue->setText("Next Video");
-                LoadSecond(link.first);
+                LoadSecond(link.first,link.second[0]);
                 SoundPlayer->play();
                 Timerswitch->start(m_waitingtime);
             }
@@ -346,10 +353,12 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
 void MainWindow::Clear(){
     ImageArray.clear();
     JsonArray.clear();
+    CurrentId=0;
 }
-void MainWindow::LoadSecond(QString dir_name){
+void MainWindow::LoadSecond(QString dir_name,int n){
     statusBar()->showMessage(tr("Loading"));
     Clear();
+    CurrentId=n;
     qDebug() << "Dir Path:" << dir_name;
     if (dir_name.size() > 0)
     {
@@ -399,7 +408,20 @@ void MainWindow::LoadSecond(QString dir_name){
 
         ui->PlayButton->setEnabled(false);
         ui->PauseButton->setEnabled(true);
+        ui->RestartButton->setEnabled(true);
         statusBar()->showMessage(tr("Done"));
         ShowImage();
     }
 }
+
+void MainWindow::on_RestartButton_clicked()
+{
+    CurrentId=0;
+    Timerswitch->stop();
+    SoundPlayer->stop();
+    ui->PlayButton->setEnabled(true);
+    ui->PauseButton->setEnabled(false);
+    statusBar()->showMessage(tr("RESTART"));
+    ShowImage();
+}
+
