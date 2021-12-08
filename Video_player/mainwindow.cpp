@@ -15,8 +15,8 @@
 //MyImage VideoFrame[9000];
 
 // visualize
-// if click,check url
-// cursor location
+// 相对坐标？
+// 时间更新？
 // if have url and in the boundaries, jump to the second video
 //Q: 多线程？（button，image_time，audio，click_check);
 
@@ -91,7 +91,8 @@ void MainWindow::ShowImage()
     VideoFrame.setFlag();
     VideoFrameTemp = (unsigned char *)VideoFrame.getImageData();
     QImage *tempImage = new QImage(VideoFrameTemp, 352, 288, QImage::Format_RGB888);
-    ui->Video->setAlignment(Qt::AlignCenter);
+    ui->Video->setAlignment(Qt::AlignLeft);
+    ui->Video->setAlignment(Qt::AlignTop);
     ui->Video->setPixmap(QPixmap::fromImage(*tempImage));
     //qDebug()<<"show one image need: "<<timedebuge.elapsed()<<"ms";
     if (ImageArray[CurrentId]->qsUrl.size() != 0){
@@ -99,7 +100,7 @@ void MainWindow::ShowImage()
         setCursor(Qt::CrossCursor);
     }
     else{
-        statusBar()->showMessage(tr("Wait"));
+        statusBar()->showMessage(QString::number(CurrentId));
         setCursor(Qt::ArrowCursor);
     }
 }
@@ -304,48 +305,54 @@ void MainWindow::on_verticalSlider_valueChanged(int value)
 void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
     QPoint p = event->pos(); //Cursor position
-    ui->label_X->setText("X: " + QString::number(p.x() ));
-    ui->label_Y->setText("Y: " + QString::number(p.y() ));
+    int X=p.x()-ui->Video->x();
+    int Y=p.y()-ui->Video->y();
+    ui->label_X->setText("X: " + QString::number(X));
+    ui->label_Y->setText("Y: " + QString::number(Y));
 }
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     QPoint p = event->pos(); //Cursor position
-    QString str = "(" + QString::number(p.x()) + "," + QString::number(p.y()) + ")";
+    int X=p.x()-ui->Video->x();
+    int Y=p.y()-ui->Video->y();
+    QString str = "(" + QString::number(X) + "," + QString::number(Y) + ")";
     if (event->button() == Qt::LeftButton)
     {
         ui->label_statue->setText("Left Button Pressed");
-        ui->label_X->setText("X: " + QString::number(p.x()));
-        ui->label_Y->setText("Y: " + QString::number(p.y()));
+        ui->label_X->setText("X: " + QString::number(X));
+        ui->label_Y->setText("Y: " + QString::number(Y));
     }
     else if (event->button() == Qt::RightButton)
     {
         ui->label_statue->setText("Right Button Pressed");
-        ui->label_X->setText("X: " + QString::number(p.x()));
-        ui->label_Y->setText("Y: " + QString::number(p.y()));
+        ui->label_X->setText("X: " + QString::number(X));
+        ui->label_Y->setText("Y: " + QString::number(Y));
     }
 }
 void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
 {
     QPoint p = event->pos();
-    int X = p.x();
-    int Y = p.y();
+    int X=p.x()-ui->Video->x();
+    int Y=p.y()-ui->Video->y();
     ui->label_statue->setText("Mouse Released");
     ui->label_X->setText("X: " + QString::number(X));
     ui->label_Y->setText("Y: " + QString::number(Y));
-    if (ImageArray[CurrentId]->qsUrl.size() != 0)
-    {
-        for(auto link:ImageArray[CurrentId]->qsUrl){
-            int left = link.second[2];
-            int right = link.second[4];
-            int top = link.second[1];
-            int bottom = link.second[3];
-            if (X > left && X < right && Y < top && Y > bottom)
-            {
-                //LoadImage
-                ui->label_statue->setText("Next Video");
-                LoadSecond(link.first,link.second[0]);
-                SoundPlayer->play();
-                Timerswitch->start(m_waitingtime);
+    if(ImageArray.size()>0){
+        if (ImageArray[CurrentId]->qsUrl.size() != 0)
+        {
+            for(auto link:ImageArray[CurrentId]->qsUrl){
+                int left = link.second[2];
+                int right = link.second[4];
+                int top = link.second[1];
+                int bottom = link.second[3];
+                if (X > left && X < right && Y < top && Y > bottom)
+                {
+                    //LoadImage
+                    ui->label_statue->setText("Next Video");
+                    LoadSecond(link.first,link.second[0]);
+                    SoundPlayer->play();
+                    Timerswitch->start(m_waitingtime);
+                }
             }
         }
     }
