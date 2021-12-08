@@ -14,9 +14,10 @@
 
 //MyImage VideoFrame[9000];
 
-// visualize
-// 相对坐标？
-// 时间更新？
+// more visualize links?
+// better way to show x,y?
+// more accurate time？
+// volumn control ?
 // if have url and in the boundaries, jump to the second video
 //Q: 多线程？（button，image_time，audio，click_check);
 
@@ -96,7 +97,7 @@ void MainWindow::ShowImage()
     ui->Video->setPixmap(QPixmap::fromImage(*tempImage));
     //qDebug()<<"show one image need: "<<timedebuge.elapsed()<<"ms";
     if (ImageArray[CurrentId]->qsUrl.size() != 0){
-        statusBar()->showMessage(tr("Have Link Now"));
+        statusBar()->showMessage(tr("Have Link in frame")+QString::number(CurrentId));
         setCursor(Qt::CrossCursor);
     }
     else{
@@ -154,9 +155,9 @@ bool MainWindow::getSecondData(const QString &data_path)
             {
                 TopLeftPointX = item_object["TopLeftPointX"].toInt();
             }
-            if (item_object.contains("TopLeftPointX") && item_object["TopLeftPointX"].toInt())
+            if (item_object.contains("TopLeftPointY") && item_object["TopLeftPointY"].toInt())
             {
-                TopLeftPointY = item_object["TopLeftPointX"].toInt();
+                TopLeftPointY = item_object["TopLeftPointY"].toInt();
             }
             if (item_object.contains("BottomRightPointY") && item_object["BottomRightPointY"].toInt())
             {
@@ -337,19 +338,29 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
     ui->label_statue->setText("Mouse Released");
     ui->label_X->setText("X: " + QString::number(X));
     ui->label_Y->setText("Y: " + QString::number(Y));
-    if(ImageArray.size()>0){
+    if(ImageArray.size()>0)
+    {
         if (ImageArray[CurrentId]->qsUrl.size() != 0)
         {
+            int X=p.x()-ui->Video->x();
+            int Y=p.y()-ui->Video->y();
             for(auto link:ImageArray[CurrentId]->qsUrl){
-                int left = link.second[2];
-                int right = link.second[4];
-                int top = link.second[1];
-                int bottom = link.second[3];
-                if (X > left && X < right && Y < top && Y > bottom)
+                int left = link.second[1]; //X
+                int right = link.second[3];
+                int top = link.second[2]; //Y
+                int bottom = link.second[4];
+//                qDebug() << "left:" << left;
+//                qDebug() << "right:" << right;
+//                qDebug() << "top:" << top;
+//                qDebug() << "bottom:" << bottom;
+                if ((X > left) && (X < right) && (Y > top) && (Y < bottom))
                 {
                     //LoadImage
                     ui->label_statue->setText("Next Video");
+                    Timerswitch->stop();
+                    SoundPlayer->stop();
                     LoadSecond(link.first,link.second[0]);
+                    SoundPlayer->setPosition(SoundPlayer->duration()/9000*CurrentId);
                     SoundPlayer->play();
                     Timerswitch->start(m_waitingtime);
                 }
@@ -402,6 +413,7 @@ void MainWindow::LoadSecond(QString dir_name,int n){
         statusBar()->showMessage(tr("Sound"));
         SoundPlayer = new QMediaPlayer;
         audioOutput = new QAudioOutput;
+        connect(SoundPlayer, &QMediaPlayer::durationChanged, this, [&](qint64 dur) { qDebug() << "duration = " << dur; });
         SoundPlayer->setAudioOutput(audioOutput);
         QDir *videoPath = new QDir(dir_name);
         QStringList wavfilter;
@@ -412,7 +424,6 @@ void MainWindow::LoadSecond(QString dir_name,int n){
         qDebug() << filepath;
         SoundPlayer->setSource(QUrl::fromLocalFile(wavfile->at(0).filePath()));
         audioOutput->setVolume(50);
-
         ui->PlayButton->setEnabled(false);
         ui->PauseButton->setEnabled(true);
         ui->RestartButton->setEnabled(true);
