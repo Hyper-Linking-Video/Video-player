@@ -18,7 +18,6 @@
 // better way to show x,y?
 // more accurate time？
 // volumn control ?
-// if have url and in the boundaries, jump to the second video
 //Q: 多线程？（button，image_time，audio，click_check);
 
 MainWindow::MainWindow(QWidget *parent)
@@ -360,9 +359,6 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
                     Timerswitch->stop();
                     SoundPlayer->stop();
                     LoadSecond(link.first,link.second[0]);
-                    SoundPlayer->setPosition(SoundPlayer->duration()/9000*CurrentId);
-                    SoundPlayer->play();
-                    Timerswitch->start(m_waitingtime);
                 }
             }
         }
@@ -413,7 +409,6 @@ void MainWindow::LoadSecond(QString dir_name,int n){
         statusBar()->showMessage(tr("Sound"));
         SoundPlayer = new QMediaPlayer;
         audioOutput = new QAudioOutput;
-        connect(SoundPlayer, &QMediaPlayer::durationChanged, this, [&](qint64 dur) { qDebug() << "duration = " << dur; });
         SoundPlayer->setAudioOutput(audioOutput);
         QDir *videoPath = new QDir(dir_name);
         QStringList wavfilter;
@@ -427,8 +422,17 @@ void MainWindow::LoadSecond(QString dir_name,int n){
         ui->PlayButton->setEnabled(false);
         ui->PauseButton->setEnabled(true);
         ui->RestartButton->setEnabled(true);
-        statusBar()->showMessage(tr("Done"));
-        ShowImage();
+        //connect(SoundPlayer, &QMediaPlayer::durationChanged, this, [&](qint64 dur) { qDebug() << "duration = " << dur; });
+        QObject::connect(SoundPlayer, &QMediaPlayer::mediaStatusChanged,
+                             [&](QMediaPlayer::MediaStatus status){
+                if(status == QMediaPlayer::LoadedMedia) {
+                    statusBar()->showMessage(tr("Done"));
+                    ShowImage();
+                    SoundPlayer->setPosition(SoundPlayer->duration()/9000*CurrentId);
+                    SoundPlayer->play();
+                    Timerswitch->start(m_waitingtime);
+                }
+        });
     }
 }
 
