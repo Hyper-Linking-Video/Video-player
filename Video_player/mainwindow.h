@@ -47,7 +47,7 @@ public:
 
 private slots:
     void mouseReleaseEvent(QMouseEvent *e);
-    void UpdateTimer();
+    void UpdateTimer(int offset=0);
     void OnTimerSwitch();
     bool getSecondData(const QString &data_path);
     void AddLink();
@@ -70,7 +70,7 @@ private:
     QMediaPlayer *SoundPlayer;
     QAudioOutput *audioOutput;
     QTimer* Timerswitch;
-    int m_waitingtime=30; // faster than thought
+    int m_waitingtime=33; // faster than thought
     std::unordered_map<int, MainImage *> ImageArray;
     std::vector<SecondImage *> JsonArray;
     int CurrentId;

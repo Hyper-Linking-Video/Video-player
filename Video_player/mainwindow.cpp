@@ -46,16 +46,21 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
-void MainWindow::UpdateTimer()
+void MainWindow::UpdateTimer(int offset)
 {
     Timerswitch->stop();
-    Timerswitch->start(m_waitingtime);
+    if(m_waitingtime-offset<0){
+        ShowImage();
+        Timerswitch->start(m_waitingtime);
+    }
+    else{
+        Timerswitch->start(m_waitingtime-offset);
+    }
 }
 void MainWindow::OnTimerSwitch()
 {
-    //QElapsedTimer timedebuge;
-    //timedebuge.start();
-    this->UpdateTimer();
+    QElapsedTimer timedebuge;
+    timedebuge.start();
     CurrentId++;
     if (CurrentId >= ImageArray.size())
     {
@@ -75,7 +80,8 @@ void MainWindow::OnTimerSwitch()
         }
         //nextimg.load(ImageArray[CurrentId]->qsImagePath);
     }
-    //qDebug()<<"show one image need: "<<timedebuge.elapsed()<<"ms";
+    qDebug()<<"show one image need: "<<timedebuge.elapsed()<<"ms";
+    this->UpdateTimer(timedebuge.elapsed());
 }
 void MainWindow::ShowImage()
 {
@@ -344,21 +350,23 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
             int X=p.x()-ui->Video->x();
             int Y=p.y()-ui->Video->y();
             for(auto link:ImageArray[CurrentId]->qsUrl){
-                int left = link.second[1]; //X
-                int right = link.second[3];
-                int top = link.second[2]; //Y
-                int bottom = link.second[4];
-//                qDebug() << "left:" << left;
-//                qDebug() << "right:" << right;
-//                qDebug() << "top:" << top;
-//                qDebug() << "bottom:" << bottom;
-                if ((X > left) && (X < right) && (Y > top) && (Y < bottom))
-                {
-                    //LoadImage
-                    ui->label_statue->setText("Next Video");
-                    Timerswitch->stop();
-                    SoundPlayer->stop();
-                    LoadSecond(link.first,link.second[0]);
+                for(auto i=0;i<link.second.size();i=i+5){
+                    int left = link.second[i+1]; //X
+                    int right = link.second[i+3];
+                    int top = link.second[i+2]; //Y
+                    int bottom = link.second[i+4];
+    //                qDebug() << "left:" << left;
+    //                qDebug() << "right:" << right;
+    //                qDebug() << "top:" << top;
+    //                qDebug() << "bottom:" << bottom;
+                    if ((X > left) && (X < right) && (Y > top) && (Y < bottom))
+                    {
+                        //LoadImage
+                        ui->label_statue->setText("Next Video");
+                        Timerswitch->stop();
+                        SoundPlayer->stop();
+                        LoadSecond(link.first,link.second[i]);
+                    }
                 }
             }
         }
