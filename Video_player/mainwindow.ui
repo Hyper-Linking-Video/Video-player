@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>382</width>
+    <width>632</width>
     <height>411</height>
    </rect>
   </property>
@@ -54,6 +54,13 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="RestartButton">
+         <property name="text">
+          <string>Restart</string>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="PlayButton">
@@ -140,7 +147,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label_Y">
+       <widget class="QLabel" name="label_X">
         <property name="text">
          <string>X</string>
         </property>
@@ -150,7 +157,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label_X">
+       <widget class="QLabel" name="label_Y">
         <property name="text">
          <string>Y</string>
         </property>
@@ -180,7 +187,7 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
-         <widget class="QLabel" name="Video">
+         <widget class="myqlabel" name="Video">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -203,13 +210,20 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>382</width>
+     <width>632</width>
      <height>26</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>myqlabel</class>
+   <extends>QLabel</extends>
+   <header location="global">myqlabel.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

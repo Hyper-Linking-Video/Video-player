@@ -11,11 +11,13 @@ CONFIG += c++11
 SOURCES += \
     Image.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    myqlabel.cpp
 
 HEADERS += \
     Image.h \
     mainwindow.h \
+    myqlabel.h \
     resource.h
 
 FORMS += \
