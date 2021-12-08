@@ -68,5 +68,7 @@ private:
     std::unordered_map<int, MainImage *> ImageArray;
     std::vector<SecondImage *> JsonArray;
     int CurrentId;
+
+    void getVideoSound(QString datapath);
 };
 #endif // MAINWINDOW_H

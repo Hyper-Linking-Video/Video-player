@@ -207,7 +207,6 @@ void MainWindow::OnTimerSwitch()
         if(ui->PauseButton->isEnabled()){
             ShowImage();
         }
-        //nextimg.load(ImageArray[CurrentId]->qsImagePath);
     }
     this->UpdateTimer();
 }
@@ -256,7 +255,10 @@ void MainWindow::on_LoadVideoButton_clicked()
 
         ui->PlayButton->setEnabled(true);
         statusBar()->showMessage(tr("Done"));
+        QElapsedTimer timedebuge;
+        timedebuge.start();
         ShowImage();
+        m_waitingtime=33-timedebuge.elapsed();
     }
 }
 void MainWindow::ShowImage(){
