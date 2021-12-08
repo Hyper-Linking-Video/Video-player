@@ -14,8 +14,10 @@
 
 //MyImage VideoFrame[9000];
 
-//if click,check url,check cursor location
-//if have url and in the boundaries, jump to the second video
+// visualize
+// if click,check url
+// cursor location
+// if have url and in the boundaries, jump to the second video
 //Q: 多线程？（button，image_time，audio，click_check);
 
 MainWindow::MainWindow(QWidget *parent)
@@ -131,35 +133,35 @@ bool MainWindow::getSecondData(const QString &data_path)
             {
                 AimVideoFrameNumber = item_object["AimVideoFrameNumber"].toInt();
             }
-            else if (item_object.contains("PrimaryVideoFrameNumber") && item_object["PrimaryVideoFrameNumber"].toInt())
+            if (item_object.contains("PrimaryVideoFrameNumber") && item_object["PrimaryVideoFrameNumber"].toInt())
             {
                 PrimaryVideoFrameNumber = item_object["PrimaryVideoFrameNumber"].toInt();
             }
-            else if (item_object.contains("BottomRightPointX") && item_object["BottomRightPointX"].toInt())
+            if (item_object.contains("BottomRightPointX") && item_object["BottomRightPointX"].toInt())
             {
                 BottomRightPointX = item_object["BottomRightPointX"].toInt();
             }
-            else if (item_object.contains("TopLeftPointX") && item_object["TopLeftPointX"].toInt())
+            if (item_object.contains("TopLeftPointX") && item_object["TopLeftPointX"].toInt())
             {
                 TopLeftPointX = item_object["TopLeftPointX"].toInt();
             }
-            else if (item_object.contains("TopLeftPointX") && item_object["TopLeftPointX"].toInt())
+            if (item_object.contains("TopLeftPointX") && item_object["TopLeftPointX"].toInt())
             {
                 TopLeftPointY = item_object["TopLeftPointX"].toInt();
             }
-            else if (item_object.contains("BottomRightPointY") && item_object["BottomRightPointY"].toInt())
+            if (item_object.contains("BottomRightPointY") && item_object["BottomRightPointY"].toInt())
             {
                 BottomRightPointY = item_object["BottomRightPointY"].toInt();
             }
-            else if (item_object.contains("AimVideoName"))
+            if (item_object.contains("AimVideoName"))
             {
                 AimVideoName = item_object["AimVideoName"].toString();
             }
-            else if (item_object.contains("HyperLinkName"))
+            if (item_object.contains("HyperLinkName"))
             {
                 HyperLinkName = item_object["HyperLinkName"].toString();
             }
-            if (BottomRightPointX >= TopLeftPointX || BottomRightPointY >= TopLeftPointY || PrimaryVideoFrameNumber < 0 || AimVideoFrameNumber < 0)
+            if (BottomRightPointX >= TopLeftPointX && BottomRightPointY >= TopLeftPointY && PrimaryVideoFrameNumber > 0 && AimVideoFrameNumber > 0)
             {
                 SecondImage *img = new SecondImage;
                 img->AimVideoFrameNumber = AimVideoFrameNumber;
@@ -193,6 +195,7 @@ void MainWindow::LoadImage(int imageid, QString imagePath)
 }
 void MainWindow::AddLink()
 {
+    int t=0;
     for (auto info : JsonArray)
     {
         auto got = ImageArray.find(info->PrimaryVideoFrameNumber);
@@ -203,13 +206,16 @@ void MainWindow::AddLink()
             ImageArray[info->PrimaryVideoFrameNumber]->qsUrl[info->AimVideoName].push_back(info->TopLeftPointY);
             ImageArray[info->PrimaryVideoFrameNumber]->qsUrl[info->AimVideoName].push_back(info->BottomRightPointX);
             ImageArray[info->PrimaryVideoFrameNumber]->qsUrl[info->AimVideoName].push_back(info->BottomRightPointY);
+            t=t+1;
         }
     }
+    qDebug() << "add links:" << t;
 }
 
 void MainWindow::on_LoadVideoButton_clicked()
 {
     statusBar()->showMessage(tr("Loading"));
+    Clear();
     QString dir_name = QFileDialog::getExistingDirectory(NULL, "Please choose the directory with the primary video's frame files", ".");
     qDebug() << "Dir Path:" << dir_name;
     if (dir_name.size() > 0)
@@ -228,14 +234,24 @@ void MainWindow::on_LoadVideoButton_clicked()
 
             return;
         }
-        //getSecondData(data_path);
 
         for (int i = 0; i < fileCount; i++)
         {
             QString imagePath = fileInfo->at(i).filePath();
             LoadImage(i, imagePath);
         }
-        AddLink();
+        QDir *data_path = new QDir(dir_name);
+        QStringList jsonfilter;
+        jsonfilter << "*.json";
+        data_path->setNameFilters(jsonfilter);
+        QList<QFileInfo> *datafile = new QList<QFileInfo>(data_path->entryInfoList(jsonfilter));
+        int datafileCount = datafile->count();
+        if(datafileCount>0){
+            QString jsonPath = datafile->at(0).filePath();
+            getSecondData(jsonPath);
+            qDebug() << "JsonArray size:" << JsonArray.size();
+            AddLink();
+        }
         SoundPlayer = new QMediaPlayer;
         audioOutput = new QAudioOutput;
         SoundPlayer->setAudioOutput(audioOutput);
@@ -280,6 +296,9 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
     QPoint p = event->pos(); //Cursor position
     ui->label_X->setText("X: " + QString::number(p.x() - 1));
     ui->label_Y->setText("Y: " + QString::number(p.y() - 47));
+    if (ImageArray[CurrentId]->qsUrl.size() != 0){
+        statusBar()->showMessage(tr("Have Link Now"));
+    }
 }
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
@@ -318,14 +337,19 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
                 //LoadImage
                 ui->label_statue->setText("Next Video");
                 LoadSecond(link.first);
-                UpdateTimer();
+                SoundPlayer->play();
+                Timerswitch->start(m_waitingtime);
             }
         }
     }
 }
-
+void MainWindow::Clear(){
+    ImageArray.clear();
+    JsonArray.clear();
+}
 void MainWindow::LoadSecond(QString dir_name){
     statusBar()->showMessage(tr("Loading"));
+    Clear();
     qDebug() << "Dir Path:" << dir_name;
     if (dir_name.size() > 0)
     {
@@ -340,17 +364,26 @@ void MainWindow::LoadSecond(QString dir_name){
         if (fileCount < 9000)
         {
             QMessageBox::warning(this, tr("Error!"), tr("The frame files in this directory are not enough to generate a video. Please choose another directory."));
-
             return;
         }
-        //getSecondData(data_path);
-
         for (int i = 0; i < fileCount; i++)
         {
             QString imagePath = fileInfo->at(i).filePath();
             LoadImage(i, imagePath);
         }
-        AddLink();
+        statusBar()->showMessage(tr("Load json"));
+        QDir *data_path = new QDir(dir_name);
+        QStringList jsonfilter;
+        jsonfilter << "*.json";
+        data_path->setNameFilters(jsonfilter);
+        QList<QFileInfo> *datafile = new QList<QFileInfo>(data_path->entryInfoList(jsonfilter));
+        int datafileCount = datafile->count();
+        if(datafileCount>0){
+            QString jsonPath = datafile->at(0).filePath();
+            getSecondData(jsonPath);
+            AddLink();
+        }
+        statusBar()->showMessage(tr("Sound"));
         SoundPlayer = new QMediaPlayer;
         audioOutput = new QAudioOutput;
         SoundPlayer->setAudioOutput(audioOutput);
@@ -364,7 +397,8 @@ void MainWindow::LoadSecond(QString dir_name){
         SoundPlayer->setSource(QUrl::fromLocalFile(wavfile->at(0).filePath()));
         audioOutput->setVolume(50);
 
-        ui->PlayButton->setEnabled(true);
+        ui->PlayButton->setEnabled(false);
+        ui->PauseButton->setEnabled(true);
         statusBar()->showMessage(tr("Done"));
         ShowImage();
     }

@@ -57,6 +57,7 @@ private slots:
     void on_verticalSlider_valueChanged(int value);
     void on_PauseButton_clicked(bool checked);
     void LoadSecond(QString dir_name);
+    void Clear();
 
 protected:
     void mouseMoveEvent(QMouseEvent *e);
