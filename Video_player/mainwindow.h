@@ -8,12 +8,14 @@
 #include <QMediaPlayer>
 #include <vector>
 #include <unordered_map>
+#include <QString>
 
 struct SecondImage
 {
     int PrimaryVideoFrameNumber;
     int AimVideoFrameNumber;
-    int index;
+    QString AimVideoName;
+    QString HyperLinkName;
     int BottomRightPointX;
     int BottomRightPointY;
     int TopLeftPointX;
@@ -24,7 +26,7 @@ struct MainImage
 {
     int iId;
     QString qsImagePath;
-    std::vector<int> qsUrl;//second info
+    std::unordered_map<QString,std::vector<int>> qsUrl;//second info
 };
 
 QT_BEGIN_NAMESPACE
@@ -54,6 +56,7 @@ private slots:
     void on_PlayButton_clicked(bool checked);
     void on_verticalSlider_valueChanged(int value);
     void on_PauseButton_clicked(bool checked);
+    void LoadSecond(QString dir_name);
 
 protected:
     void mouseMoveEvent(QMouseEvent *e);
@@ -64,7 +67,7 @@ private:
     QMediaPlayer *SoundPlayer;
     QAudioOutput *audioOutput;
     QTimer* Timerswitch;
-    int m_waitingtime=13; // faster than thought
+    int m_waitingtime=30; // faster than thought
     std::unordered_map<int, MainImage *> ImageArray;
     std::vector<SecondImage *> JsonArray;
     int CurrentId;

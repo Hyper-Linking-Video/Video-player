@@ -10,10 +10,10 @@
 #include <QJsonParseError>
 #include <QTimer>
 #include <algorithm>
+#include <QElapsedTimer>
 
 //MyImage VideoFrame[9000];
 
-//load image(play video),play sound
 //if click,check url,check cursor location
 //if have url and in the boundaries, jump to the second video
 //Q: 多线程？（button，image_time，audio，click_check);
@@ -44,50 +44,54 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
-void MainWindow::mouseMoveEvent(QMouseEvent *event)
+void MainWindow::UpdateTimer()
 {
-    QPoint p = event->pos(); //Cursor position
-    ui->label_X->setText("X: "+QString::number(p.x()-1));
-    ui->label_Y->setText("Y: "+QString::number(p.y()-47));
+    Timerswitch->stop();
+    Timerswitch->start(m_waitingtime);
 }
-void MainWindow::mousePressEvent(QMouseEvent *event)
+void MainWindow::OnTimerSwitch()
 {
-    QPoint p = event->pos(); //Cursor position
-    QString str = "(" + QString::number(p.x()) + "," + QString::number(p.y()) + ")";
-    if (event->button() == Qt::LeftButton)
+    QElapsedTimer timedebuge;
+    timedebuge.start();
+    this->UpdateTimer();
+    CurrentId++;
+    if (CurrentId >= ImageArray.size())
     {
-        ui->label_statue->setText("Left Button Pressed");
-        ui->label_X->setText("X: "+QString::number(p.x()));
-        ui->label_Y->setText("Y: "+QString::number(p.y()));
+        //QImage image(data,width,height,每行字节数,QImage::Format_RGB888);
+        //nextimg=QPixmap::fromImage(image);
+        //ui->Video->setPixmap(QPixmap::fromImage(image));
+        //nextimg.load(ImageArray[0]->qsImagePath);
+        statusBar()->showMessage(tr("Finish"));
+        Timerswitch->stop();
+        SoundPlayer->stop();
     }
-    else if (event->button() == Qt::RightButton)
+    else
     {
-        ui->label_statue->setText("Right Button Pressed");
-        ui->label_X->setText("X: "+QString::number(p.x()));
-        ui->label_Y->setText("Y: "+QString::number(p.y()));
-    }
-}
-void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
-{
-    QPoint p=event->pos();
-    int X = p.x();
-    int Y = p.y();
-    ui->label_statue->setText("Mouse Released");
-    ui->label_X->setText("X: "+QString::number(X));
-    ui->label_Y->setText("Y: "+QString::number(Y));
-    if (ImageArray[CurrentId]->qsUrl.size()!=0)
-    {
-        int left=ImageArray[CurrentId]->qsUrl[2];
-        int right=ImageArray[CurrentId]->qsUrl[4];
-        int top=ImageArray[CurrentId]->qsUrl[1];
-        int bottom=ImageArray[CurrentId]->qsUrl[3];
-        if (X > left && X < right && Y < top && Y > bottom)
+        if (ui->PauseButton->isEnabled())
         {
-            //LoadImage
-            ui->label_statue->setText("Next Video");
-            UpdateTimer();
+            ShowImage();
         }
+        //nextimg.load(ImageArray[CurrentId]->qsImagePath);
     }
+    qDebug()<<"show one image need: "<<timedebuge.elapsed()<<"ms";
+}
+void MainWindow::ShowImage()
+{
+    //QElapsedTimer timedebuge;
+    //timedebuge.start();
+    MyImage VideoFrame;
+    VideoFrame.setWidth(352);
+    VideoFrame.setHeight(288);
+    auto pathTemp = ImageArray[CurrentId]->qsImagePath.toLatin1();
+    VideoFrame.setImagePath(pathTemp.data());
+    unsigned char *VideoFrameTemp = new unsigned char[3 * 352 * 288]();
+    VideoFrame.ReadImage();
+    VideoFrame.setFlag();
+    VideoFrameTemp = (unsigned char *)VideoFrame.getImageData();
+    QImage *tempImage = new QImage(VideoFrameTemp, 352, 288, QImage::Format_RGB888);
+    ui->Video->setAlignment(Qt::AlignCenter);
+    ui->Video->setPixmap(QPixmap::fromImage(*tempImage));
+    //qDebug()<<"show one image need: "<<timedebuge.elapsed()<<"ms";
 }
 bool MainWindow::getSecondData(const QString &data_path)
 {
@@ -120,6 +124,8 @@ bool MainWindow::getSecondData(const QString &data_path)
             qreal TopLeftPointX = -1;
             qreal TopLeftPointY = -1;
             qreal PrimaryVideoFrameNumber = -1;
+            QString AimVideoName;
+            QString HyperLinkName;
 
             if (item_object.contains("AimVideoFrameNumber") && item_object["AimVideoFrameNumber"].toInt())
             {
@@ -145,14 +151,25 @@ bool MainWindow::getSecondData(const QString &data_path)
             {
                 BottomRightPointY = item_object["BottomRightPointY"].toInt();
             }
-            if (BottomRightPointX >= TopLeftPointX || BottomRightPointY >= TopLeftPointY || PrimaryVideoFrameNumber < 0 || AimVideoFrameNumber < 0){
+            else if (item_object.contains("AimVideoName"))
+            {
+                AimVideoName = item_object["AimVideoName"].toString();
+            }
+            else if (item_object.contains("HyperLinkName"))
+            {
+                HyperLinkName = item_object["HyperLinkName"].toString();
+            }
+            if (BottomRightPointX >= TopLeftPointX || BottomRightPointY >= TopLeftPointY || PrimaryVideoFrameNumber < 0 || AimVideoFrameNumber < 0)
+            {
                 SecondImage *img = new SecondImage;
-                img->AimVideoFrameNumber=AimVideoFrameNumber;
-                img->PrimaryVideoFrameNumber=PrimaryVideoFrameNumber;
-                img->BottomRightPointX=BottomRightPointX;
-                img->BottomRightPointY=BottomRightPointY;
-                img->TopLeftPointX=TopLeftPointX;
-                img->TopLeftPointY=TopLeftPointY;
+                img->AimVideoFrameNumber = AimVideoFrameNumber;
+                img->PrimaryVideoFrameNumber = PrimaryVideoFrameNumber;
+                img->BottomRightPointX = BottomRightPointX;
+                img->BottomRightPointY = BottomRightPointY;
+                img->TopLeftPointX = TopLeftPointX;
+                img->TopLeftPointY = TopLeftPointY;
+                img->AimVideoName = AimVideoName;
+                img->HyperLinkName = HyperLinkName;
                 JsonArray.push_back(img);
             }
             else
@@ -166,50 +183,28 @@ bool MainWindow::getSecondData(const QString &data_path)
     return true;
 }
 
-void MainWindow::LoadImage(int imageid,QString imagePath)
+void MainWindow::LoadImage(int imageid, QString imagePath)
 {
     MainImage *img = new MainImage;
     img->iId = imageid;
     img->qsImagePath = imagePath;
-    ImageArray[imageid]=img;
+    ImageArray[imageid] = img;
     return;
 }
-void MainWindow::AddLink(){
-    for(auto info:JsonArray){
+void MainWindow::AddLink()
+{
+    for (auto info : JsonArray)
+    {
         auto got = ImageArray.find(info->PrimaryVideoFrameNumber);
-        if(got!=ImageArray.end()){
-            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl.push_back(info->AimVideoFrameNumber);
-            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl.push_back(info->TopLeftPointX);
-            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl.push_back(info->TopLeftPointY);
-            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl.push_back(info->BottomRightPointX);
-            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl.push_back(info->BottomRightPointY);
+        if (got != ImageArray.end())
+        {
+            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl[info->AimVideoName].push_back(info->AimVideoFrameNumber);
+            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl[info->AimVideoName].push_back(info->TopLeftPointX);
+            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl[info->AimVideoName].push_back(info->TopLeftPointY);
+            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl[info->AimVideoName].push_back(info->BottomRightPointX);
+            ImageArray[info->PrimaryVideoFrameNumber]->qsUrl[info->AimVideoName].push_back(info->BottomRightPointY);
         }
     }
-}
-void MainWindow::UpdateTimer()
-{
-    Timerswitch->stop();
-    Timerswitch->start(m_waitingtime);
-}
-void MainWindow::OnTimerSwitch()
-{
-    QPixmap nextimg;
-    CurrentId++;
-    if (CurrentId >= ImageArray.size())
-    {
-        //QImage image(data,width,height,每行字节数,QImage::Format_RGB888);
-        //nextimg=QPixmap::fromImage(image);
-        //ui->Video->setPixmap(QPixmap::fromImage(image));
-        //nextimg.load(ImageArray[0]->qsImagePath);
-    }
-    else
-    {
-        if(ui->PauseButton->isEnabled()){
-            ShowImage();
-        }
-        //nextimg.load(ImageArray[CurrentId]->qsImagePath);
-    }
-    this->UpdateTimer();
 }
 
 void MainWindow::on_LoadVideoButton_clicked()
@@ -238,7 +233,7 @@ void MainWindow::on_LoadVideoButton_clicked()
         for (int i = 0; i < fileCount; i++)
         {
             QString imagePath = fileInfo->at(i).filePath();
-            LoadImage(i,imagePath);
+            LoadImage(i, imagePath);
         }
         AddLink();
         SoundPlayer = new QMediaPlayer;
@@ -259,20 +254,7 @@ void MainWindow::on_LoadVideoButton_clicked()
         ShowImage();
     }
 }
-void MainWindow::ShowImage(){
-    MyImage VideoFrame;
-    VideoFrame.setWidth(352);
-    VideoFrame.setHeight(288);
-    auto pathTemp=ImageArray[CurrentId]->qsImagePath.toLatin1();
-    VideoFrame.setImagePath(pathTemp.data());
-    unsigned char *VideoFrameTemp = new unsigned char[3 * 352 * 288]();
-    VideoFrame.ReadImage();
-    VideoFrame.setFlag();
-    VideoFrameTemp = (unsigned char *)VideoFrame.getImageData();
-    QImage *tempImage = new QImage(VideoFrameTemp, 352, 288, QImage::Format_RGB888);
-    ui->Video->setAlignment(Qt::AlignCenter);
-    ui->Video->setPixmap(QPixmap::fromImage(*tempImage));
-}
+
 void MainWindow::on_PlayButton_clicked(bool checked)
 {
     SoundPlayer->play();
@@ -292,10 +274,58 @@ void MainWindow::on_verticalSlider_valueChanged(int value)
 {
     audioOutput->setVolume(value);
 }
-/*
-void MainWindow::on_LoadVideoButton_clicked()
+
+void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
-    QString dir_name = QFileDialog::getExistingDirectory(NULL, "Please choose the directory with the primary video's frame files", ".");
+    QPoint p = event->pos(); //Cursor position
+    ui->label_X->setText("X: " + QString::number(p.x() - 1));
+    ui->label_Y->setText("Y: " + QString::number(p.y() - 47));
+}
+void MainWindow::mousePressEvent(QMouseEvent *event)
+{
+    QPoint p = event->pos(); //Cursor position
+    QString str = "(" + QString::number(p.x()) + "," + QString::number(p.y()) + ")";
+    if (event->button() == Qt::LeftButton)
+    {
+        ui->label_statue->setText("Left Button Pressed");
+        ui->label_X->setText("X: " + QString::number(p.x()));
+        ui->label_Y->setText("Y: " + QString::number(p.y()));
+    }
+    else if (event->button() == Qt::RightButton)
+    {
+        ui->label_statue->setText("Right Button Pressed");
+        ui->label_X->setText("X: " + QString::number(p.x()));
+        ui->label_Y->setText("Y: " + QString::number(p.y()));
+    }
+}
+void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
+{
+    QPoint p = event->pos();
+    int X = p.x();
+    int Y = p.y();
+    ui->label_statue->setText("Mouse Released");
+    ui->label_X->setText("X: " + QString::number(X));
+    ui->label_Y->setText("Y: " + QString::number(Y));
+    if (ImageArray[CurrentId]->qsUrl.size() != 0)
+    {
+        for(auto link:ImageArray[CurrentId]->qsUrl){
+            int left = link.second[2];
+            int right = link.second[4];
+            int top = link.second[1];
+            int bottom = link.second[3];
+            if (X > left && X < right && Y < top && Y > bottom)
+            {
+                //LoadImage
+                ui->label_statue->setText("Next Video");
+                LoadSecond(link.first);
+                UpdateTimer();
+            }
+        }
+    }
+}
+
+void MainWindow::LoadSecond(QString dir_name){
+    statusBar()->showMessage(tr("Loading"));
     qDebug() << "Dir Path:" << dir_name;
     if (dir_name.size() > 0)
     {
@@ -313,44 +343,29 @@ void MainWindow::on_LoadVideoButton_clicked()
 
             return;
         }
+        //getSecondData(data_path);
 
         for (int i = 0; i < fileCount; i++)
         {
-            VideoFrame[i].setWidth(352);
-            VideoFrame[i].setHeight(288);
-
-            QByteArray pathTemp = fileInfo->at(i).filePath().toLatin1();
-
-            VideoFrame[i].setImagePath(pathTemp.data());
+            QString imagePath = fileInfo->at(i).filePath();
+            LoadImage(i, imagePath);
         }
-        unsigned char *VideoFrameTemp = new unsigned char[3 * 352 * 288]();
-        VideoFrame[0].ReadImage();
-        VideoFrame[0].setFlag();
-        VideoFrameTemp = (unsigned char *)VideoFrame[0].getImageData();
-        QImage *tempImage = new QImage(VideoFrameTemp, 352, 288, QImage::Format_RGB888);
-        ui->Video->setAlignment(Qt::AlignCenter);
-        ui->Video->setPixmap(QPixmap::fromImage(*tempImage));
+        AddLink();
+        SoundPlayer = new QMediaPlayer;
+        audioOutput = new QAudioOutput;
+        SoundPlayer->setAudioOutput(audioOutput);
+        QDir *videoPath = new QDir(dir_name);
+        QStringList wavfilter;
+        wavfilter << "*.wav";
+        videoPath->setNameFilters(wavfilter);
+        QList<QFileInfo> *wavfile = new QList<QFileInfo>(videoPath->entryInfoList(wavfilter));
+        QString filepath = wavfile->at(0).filePath();
+        qDebug() << filepath;
+        SoundPlayer->setSource(QUrl::fromLocalFile(wavfile->at(0).filePath()));
+        audioOutput->setVolume(50);
+
         ui->PlayButton->setEnabled(true);
+        statusBar()->showMessage(tr("Done"));
+        ShowImage();
     }
 }
-
-void MainWindow::on_PlayButton_clicked(bool checked)
-{
-    ui->PlayButton->setEnabled(false);
-    ui->PauseButton->setEnabled(false);
-    player = new QMediaPlayer;
-    audioOutput = new QAudioOutput;
-    player->setAudioOutput(audioOutput);
-    QDir *videoPath = new QDir(VideoPath);
-    QStringList wavfilter;
-    wavfilter << "*.wav";
-    videoPath->setNameFilters(wavfilter);
-    QList<QFileInfo> *wavfile = new QList<QFileInfo>(videoPath->entryInfoList(wavfilter));
-    QString filepath = wavfile->at(0).filePath();
-    qDebug() << filepath;
-    player->setSource(QUrl::fromLocalFile(wavfile->at(0).filePath()));
-
-    audioOutput->setVolume(50);
-    player->play();
-}
-*/
