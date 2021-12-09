@@ -18,20 +18,16 @@
 //MyImage VideoFrame[9000];
 
 // better way to show x,y?
-// volumn control ?
-//Q: 多线程？（button，image_time，audio，click_check);
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    this->setWindowTitle("Window1");
+    this->setWindowTitle("Window");
     ui->PlayButton->setEnabled(false);
     ui->PauseButton->setEnabled(false);
     ui->RestartButton->setEnabled(false);
-    ui->verticalSlider->setMinimum(0);
-    ui->verticalSlider->setMaximum(100);
-    ui->verticalSlider->setSingleStep(1);
+    ui->verticalSlider->setEnabled(false);
     //Cursor check
     ui->label_statue->setText("");
     ui->label_X->setText("X: ");
@@ -244,9 +240,12 @@ void MainWindow::on_LoadVideoButton_clicked()
 {
     QString dir_name = QFileDialog::getExistingDirectory(NULL, "Please choose the directory with the primary video's frame files", ".");
     LoadSecond(dir_name,0);
-    ui->PlayButton->setEnabled(true);
-    ui->RestartButton->setEnabled(true);
-    ui->PauseButton->setEnabled(false);
+    if(dir_name.size() > 0){
+        ui->PlayButton->setEnabled(true);
+        ui->RestartButton->setEnabled(true);
+        ui->PauseButton->setEnabled(false);
+        ui->verticalSlider->setEnabled(true);
+    }
 }
 void MainWindow::LoadSecond(QString dir_name,int n){
     statusBar()->showMessage(tr("Loading"));
@@ -275,7 +274,7 @@ void MainWindow::LoadSecond(QString dir_name,int n){
         }
         statusBar()->showMessage(tr("Load json"));
         QDir *data_path = new QDir(dir_name);
-        QStringList jsonfilter;
+        QStringList jsonfilter; //filter can not reuse
         jsonfilter << "*.json";
         data_path->setNameFilters(jsonfilter);
         QList<QFileInfo> *datafile = new QList<QFileInfo>(data_path->entryInfoList(jsonfilter));
@@ -298,7 +297,7 @@ void MainWindow::LoadSecond(QString dir_name,int n){
         QString filepath = wavfile->at(0).filePath();
         qDebug() << filepath;
         SoundPlayer->setSource(QUrl::fromLocalFile(wavfile->at(0).filePath()));
-        audioOutput->setVolume(50);
+        audioOutput->setVolume(double(ui->verticalSlider->value())/100.);
         ui->PlayButton->setEnabled(false);
         ui->PauseButton->setEnabled(true);
         ui->RestartButton->setEnabled(true);
@@ -341,8 +340,8 @@ void MainWindow::on_PauseButton_clicked(bool checked)
 }
 void MainWindow::on_verticalSlider_valueChanged(int value)
 {
-    qDebug() <<value;
-    audioOutput->setVolume(value);
+    double New=double(value)/100.0;
+    audioOutput->setVolume(New);
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent *event)
@@ -350,26 +349,43 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
     QPoint p = event->pos(); //Cursor position
     int X=p.x()-ui->Video->x();
     int Y=p.y()-ui->Video->y();
-    ui->label_X->setText("X: " + QString::number(X));
-    ui->label_Y->setText("Y: " + QString::number(Y));
+    if(X<350 && Y<290){
+        ui->label_X->setText("X: " + QString::number(X));
+        ui->label_Y->setText("Y: " + QString::number(Y));
+    }
+    else{
+        ui->label_X->setText("Out of boundary");
+        ui->label_Y->setText("Out of boundary");
+    }
 }
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     QPoint p = event->pos(); //Cursor position
     int X=p.x()-ui->Video->x();
     int Y=p.y()-ui->Video->y();
-    QString str = "(" + QString::number(X) + "," + QString::number(Y) + ")";
     if (event->button() == Qt::LeftButton)
     {
         ui->label_statue->setText("Left Button Pressed");
-        ui->label_X->setText("X: " + QString::number(X));
-        ui->label_Y->setText("Y: " + QString::number(Y));
+        if(X<350 && Y<290 && X>0 && Y>0){
+            ui->label_X->setText("X: " + QString::number(X));
+            ui->label_Y->setText("Y: " + QString::number(Y));
+        }
+        else{
+            ui->label_X->setText("Out of boundary");
+            ui->label_Y->setText("Out of boundary");
+        }
     }
     else if (event->button() == Qt::RightButton)
     {
         ui->label_statue->setText("Right Button Pressed");
-        ui->label_X->setText("X: " + QString::number(X));
-        ui->label_Y->setText("Y: " + QString::number(Y));
+        if(X<350 && Y<287 && X>0 && Y>0){
+            ui->label_X->setText("X: " + QString::number(X));
+            ui->label_Y->setText("Y: " + QString::number(Y));
+        }
+        else{
+            ui->label_X->setText("Out of boundary");
+            ui->label_Y->setText("Out of boundary");
+        }
     }
 }
 void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
@@ -378,9 +394,15 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
     int X=p.x()-ui->Video->x();
     int Y=p.y()-ui->Video->y();
     ui->label_statue->setText("Mouse Released");
-    ui->label_X->setText("X: " + QString::number(X));
-    ui->label_Y->setText("Y: " + QString::number(Y));
-    if(ImageArray.size()>0)
+    if(X<350 && Y<287 && X>0 && Y>0){
+        ui->label_X->setText("X: " + QString::number(X));
+        ui->label_Y->setText("Y: " + QString::number(Y));
+    }
+    else{
+        ui->label_X->setText("Out of boundary");
+        ui->label_Y->setText("Out of boundary");
+    }
+    if(ImageArray.size()>0 && Y<287 && X<350 && X>0 && Y>0)
     {
         if (ImageArray[CurrentId]->qsUrl.size() != 0)
         {
@@ -411,7 +433,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
                                     SoundPlayer->setPosition(SoundPlayer->duration()*CurrentId/9000);
                                     SoundPlayer->play();
                                     Timerswitch->start();
-                                    SoundPlayer->disconnect();
+                                    SoundPlayer->disconnect(); //!!! will cause error if not disconnect
                                     //Newthread->start();
                                 }
                         });
@@ -428,7 +450,3 @@ void MainWindow::Clear(){
     ui->Video->clearAreaList();
 }
 
-void MainWindow::on_verticalSlider_sliderReleased()
-{
-    audioOutput->setVolume(ui->verticalSlider->value());
-}

@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>632</width>
-    <height>411</height>
+    <width>472</width>
+    <height>400</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -172,6 +172,9 @@
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QSlider" name="verticalSlider">
+        <property name="maximum">
+         <number>100</number>
+        </property>
         <property name="value">
          <number>50</number>
         </property>
@@ -188,6 +191,9 @@
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
          <widget class="MyQLabel" name="Video">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -210,7 +216,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>632</width>
+     <width>472</width>
      <height>26</height>
     </rect>
    </property>

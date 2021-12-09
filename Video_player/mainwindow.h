@@ -64,8 +64,6 @@ private slots:
 
     void on_RestartButton_clicked();
 
-    void on_verticalSlider_sliderReleased();
-
 protected:
     void mouseMoveEvent(QMouseEvent *e);
     void mousePressEvent(QMouseEvent *e);
