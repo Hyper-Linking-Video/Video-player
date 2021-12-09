@@ -46,6 +46,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void LoadImage(int imageid,QString imagePath);
+    int CurrentId;
 
 private slots:
     void mouseReleaseEvent(QMouseEvent *e);
@@ -63,6 +64,8 @@ private slots:
 
     void on_RestartButton_clicked();
 
+    void on_verticalSlider_sliderReleased();
+
 protected:
     void mouseMoveEvent(QMouseEvent *e);
     void mousePressEvent(QMouseEvent *e);
@@ -76,6 +79,5 @@ private:
     int m_waitingtime=33; // faster than thought
     std::unordered_map<int, MainImage *> ImageArray;
     std::vector<SecondImage *> JsonArray;
-    int CurrentId;
 };
 #endif // MAINWINDOW_H

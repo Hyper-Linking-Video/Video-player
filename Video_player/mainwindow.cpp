@@ -18,7 +18,6 @@
 //MyImage VideoFrame[9000];
 
 // better way to show x,y?
-// more accurate time？
 // volumn control ?
 //Q: 多线程？（button，image_time，audio，click_check);
 
@@ -30,6 +29,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->PlayButton->setEnabled(false);
     ui->PauseButton->setEnabled(false);
     ui->RestartButton->setEnabled(false);
+    ui->verticalSlider->setMinimum(0);
+    ui->verticalSlider->setMaximum(100);
+    ui->verticalSlider->setSingleStep(1);
     //Cursor check
     ui->label_statue->setText("");
     ui->label_X->setText("X: ");
@@ -240,9 +242,16 @@ void MainWindow::AddLink()
 
 void MainWindow::on_LoadVideoButton_clicked()
 {
+    QString dir_name = QFileDialog::getExistingDirectory(NULL, "Please choose the directory with the primary video's frame files", ".");
+    LoadSecond(dir_name,0);
+    ui->PlayButton->setEnabled(true);
+    ui->RestartButton->setEnabled(true);
+    ui->PauseButton->setEnabled(false);
+}
+void MainWindow::LoadSecond(QString dir_name,int n){
     statusBar()->showMessage(tr("Loading"));
     Clear();
-    QString dir_name = QFileDialog::getExistingDirectory(NULL, "Please choose the directory with the primary video's frame files", ".");
+    CurrentId=n;
     qDebug() << "Dir Path:" << dir_name;
     if (dir_name.size() > 0)
     {
@@ -257,15 +266,14 @@ void MainWindow::on_LoadVideoButton_clicked()
         if (fileCount < 9000)
         {
             QMessageBox::warning(this, tr("Error!"), tr("The frame files in this directory are not enough to generate a video. Please choose another directory."));
-
             return;
         }
-
         for (int i = 0; i < fileCount; i++)
         {
             QString imagePath = fileInfo->at(i).filePath();
             LoadImage(i, imagePath);
         }
+        statusBar()->showMessage(tr("Load json"));
         QDir *data_path = new QDir(dir_name);
         QStringList jsonfilter;
         jsonfilter << "*.json";
@@ -278,6 +286,7 @@ void MainWindow::on_LoadVideoButton_clicked()
             qDebug() << "JsonArray size:" << JsonArray.size();
             AddLink();
         }
+        statusBar()->showMessage(tr("Sound"));
         SoundPlayer = new QMediaPlayer;
         audioOutput = new QAudioOutput;
         SoundPlayer->setAudioOutput(audioOutput);
@@ -290,19 +299,29 @@ void MainWindow::on_LoadVideoButton_clicked()
         qDebug() << filepath;
         SoundPlayer->setSource(QUrl::fromLocalFile(wavfile->at(0).filePath()));
         audioOutput->setVolume(50);
-        ui->PlayButton->setEnabled(true);
+        ui->PlayButton->setEnabled(false);
+        ui->PauseButton->setEnabled(true);
         ui->RestartButton->setEnabled(true);
-        ui->PauseButton->setEnabled(false);
-        QObject::connect(SoundPlayer, &QMediaPlayer::mediaStatusChanged,
-                             [&](QMediaPlayer::MediaStatus status){
-                if(status == QMediaPlayer::LoadedMedia) {
-                    statusBar()->showMessage(tr("Done"));
-                    ShowImage();
-                }
-        });
+        //connect(SoundPlayer, &QMediaPlayer::durationChanged, this, [&](qint64 dur) { qDebug() << "duration = " << dur; });
+        statusBar()->showMessage(tr("Done"));
+        ShowImage();
     }
 }
 
+void MainWindow::on_RestartButton_clicked()
+{
+    SoundPlayer->stop();
+    Timerswitch->stop();
+    CurrentId=0;
+    ShowImage();
+    SoundPlayer->setPosition(SoundPlayer->duration()/9000*CurrentId);
+    //Newthread->quit();
+    ui->PlayButton->setEnabled(false);
+    ui->PauseButton->setEnabled(true);
+    SoundPlayer->play();
+    Timerswitch->start();
+    statusBar()->showMessage(tr("RESTART"));
+}
 void MainWindow::on_PlayButton_clicked(bool checked)
 {
     SoundPlayer->play();
@@ -322,6 +341,7 @@ void MainWindow::on_PauseButton_clicked(bool checked)
 }
 void MainWindow::on_verticalSlider_valueChanged(int value)
 {
+    qDebug() <<value;
     audioOutput->setVolume(value);
 }
 
@@ -383,7 +403,18 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
                         //Newthread->quit();
                         Timerswitch->stop();
                         SoundPlayer->stop();
+                        qDebug() <<"Next Video at frame "<<link.second[i];
                         LoadSecond(link.first,link.second[i]);
+                        QObject::connect(SoundPlayer, &QMediaPlayer::mediaStatusChanged,
+                                             [&](QMediaPlayer::MediaStatus status){
+                                if(status == QMediaPlayer::LoadedMedia) {
+                                    SoundPlayer->setPosition(SoundPlayer->duration()*CurrentId/9000);
+                                    SoundPlayer->play();
+                                    Timerswitch->start();
+                                    SoundPlayer->disconnect();
+                                    //Newthread->start();
+                                }
+                        });
                     }
                 }
             }
@@ -396,83 +427,8 @@ void MainWindow::Clear(){
     CurrentId=0;
     ui->Video->clearAreaList();
 }
-void MainWindow::LoadSecond(QString dir_name,int n){
-    statusBar()->showMessage(tr("Loading"));
-    Clear();
-    CurrentId=n;
-    qDebug() << "Dir Path:" << dir_name;
-    if (dir_name.size() > 0)
-    {
-        QDir *inputDir = new QDir(dir_name);
-        QStringList filter;
-        filter << "*.rgb";
-        inputDir->setNameFilters(filter);
-        QList<QFileInfo> *fileInfo = new QList<QFileInfo>(inputDir->entryInfoList(filter));
-        int fileCount = fileInfo->count();
-        qDebug() << fileCount;
 
-        if (fileCount < 9000)
-        {
-            QMessageBox::warning(this, tr("Error!"), tr("The frame files in this directory are not enough to generate a video. Please choose another directory."));
-            return;
-        }
-        for (int i = 0; i < fileCount; i++)
-        {
-            QString imagePath = fileInfo->at(i).filePath();
-            LoadImage(i, imagePath);
-        }
-        statusBar()->showMessage(tr("Load json"));
-        QDir *data_path = new QDir(dir_name);
-        QStringList jsonfilter;
-        jsonfilter << "*.json";
-        data_path->setNameFilters(jsonfilter);
-        QList<QFileInfo> *datafile = new QList<QFileInfo>(data_path->entryInfoList(jsonfilter));
-        int datafileCount = datafile->count();
-        if(datafileCount>0){
-            QString jsonPath = datafile->at(0).filePath();
-            getSecondData(jsonPath);
-            AddLink();
-        }
-        statusBar()->showMessage(tr("Sound"));
-        SoundPlayer = new QMediaPlayer;
-        audioOutput = new QAudioOutput;
-        SoundPlayer->setAudioOutput(audioOutput);
-        QDir *videoPath = new QDir(dir_name);
-        QStringList wavfilter;
-        wavfilter << "*.wav";
-        videoPath->setNameFilters(wavfilter);
-        QList<QFileInfo> *wavfile = new QList<QFileInfo>(videoPath->entryInfoList(wavfilter));
-        QString filepath = wavfile->at(0).filePath();
-        qDebug() << filepath;
-        SoundPlayer->setSource(QUrl::fromLocalFile(wavfile->at(0).filePath()));
-        audioOutput->setVolume(50);
-        ui->PlayButton->setEnabled(false);
-        ui->PauseButton->setEnabled(true);
-        ui->RestartButton->setEnabled(true);
-        //connect(SoundPlayer, &QMediaPlayer::durationChanged, this, [&](qint64 dur) { qDebug() << "duration = " << dur; });
-        QObject::connect(SoundPlayer, &QMediaPlayer::mediaStatusChanged,
-                             [&](QMediaPlayer::MediaStatus status){
-                if(status == QMediaPlayer::LoadedMedia) {
-                    statusBar()->showMessage(tr("Done"));
-                    ShowImage();
-                    SoundPlayer->setPosition(SoundPlayer->duration()/9000*CurrentId);
-                    SoundPlayer->play();
-                    Timerswitch->start();
-                    //Newthread->start();
-                }
-        });
-    }
-}
-
-void MainWindow::on_RestartButton_clicked()
+void MainWindow::on_verticalSlider_sliderReleased()
 {
-    CurrentId=0;
-    SoundPlayer->stop();
-    Timerswitch->stop();
-    //Newthread->quit();
-    ui->PlayButton->setEnabled(true);
-    ui->PauseButton->setEnabled(false);
-    statusBar()->showMessage(tr("RESTART"));
-    ShowImage();
+    audioOutput->setVolume(ui->verticalSlider->value());
 }
-
