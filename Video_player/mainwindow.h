@@ -10,6 +10,8 @@
 #include <unordered_map>
 #include <QString>
 
+#include "myqlabel.h"
+
 struct SecondImage
 {
     int PrimaryVideoFrameNumber;

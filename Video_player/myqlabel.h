@@ -12,7 +12,7 @@ class MyQLabel : public QLabel{
 public:
     MyQLabel(QWidget *parent = nullptr);
     void paintEvent(QPaintEvent* event);
-    void setNewPainter(std::vector<std::vector<int>> rect);
+    void setNewPainter(std::vector<int> rect);
     void clearAreaList(){this->areaList.clear();};
 
 private:

@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <QElapsedTimer>
 
+#include "myqlabel.h"
+
 //MyImage VideoFrame[9000];
 
 // more visualize links?
@@ -101,9 +103,13 @@ void MainWindow::ShowImage()
     ui->Video->setAlignment(Qt::AlignTop);
     ui->Video->setPixmap(QPixmap::fromImage(*tempImage));
     //qDebug()<<"show one image need: "<<timedebuge.elapsed()<<"ms";
+    ui->Video->clearAreaList();
     if (ImageArray[CurrentId]->qsUrl.size() != 0){
         statusBar()->showMessage(tr("Have Link in frame")+QString::number(CurrentId));
         setCursor(Qt::CrossCursor);
+        for(auto link:ImageArray[CurrentId]->qsUrl){
+            ui->Video->setNewPainter(link.second);
+        }
     }
     else{
         statusBar()->showMessage(QString::number(CurrentId));
@@ -210,7 +216,7 @@ void MainWindow::LoadImage(int imageid, QString imagePath)
 }
 void MainWindow::AddLink()
 {
-    int t=0;
+    //int t=0;
     for (auto info : JsonArray)
     {
         auto got = ImageArray.find(info->PrimaryVideoFrameNumber);
@@ -221,10 +227,10 @@ void MainWindow::AddLink()
             ImageArray[info->PrimaryVideoFrameNumber]->qsUrl[info->AimVideoName].push_back(info->TopLeftPointY);
             ImageArray[info->PrimaryVideoFrameNumber]->qsUrl[info->AimVideoName].push_back(info->BottomRightPointX);
             ImageArray[info->PrimaryVideoFrameNumber]->qsUrl[info->AimVideoName].push_back(info->BottomRightPointY);
-            t=t+1;
+            //t=t+1;
         }
     }
-    qDebug() << "add links:" << t;
+    //qDebug() << "add links:" << t;
 }
 
 void MainWindow::on_LoadVideoButton_clicked()
@@ -376,6 +382,7 @@ void MainWindow::Clear(){
     ImageArray.clear();
     JsonArray.clear();
     CurrentId=0;
+    ui->Video->clearAreaList();
 }
 void MainWindow::LoadSecond(QString dir_name,int n){
     statusBar()->showMessage(tr("Loading"));

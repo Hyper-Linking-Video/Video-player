@@ -7,12 +7,12 @@ MyQLabel::MyQLabel(QWidget *parent) : QLabel(parent)
 
 }
 
-void MyQLabel::setNewPainter(std::vector<std::vector<int>> rect)
+void MyQLabel::setNewPainter(std::vector<int> rect)
 {
     if(rect.size()>0){
-        for(int i = 0; i < rect.size(); i++){
-            QPoint leftTopPoint=QPoint(rect[i][0], rect[i][1]);
-            QPoint rightBottomPoint=QPoint(rect[i][2], rect[i][3]);
+        for(int i = 0; i < rect.size(); i=i+5){
+            QPoint leftTopPoint=QPoint(rect[i+1], rect[i+2]);
+            QPoint rightBottomPoint=QPoint(rect[i+3], rect[i+4]);
             areaList.append(QRect(leftTopPoint,rightBottomPoint));
         }
     }
