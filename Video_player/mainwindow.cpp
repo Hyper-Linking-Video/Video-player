@@ -8,6 +8,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonParseError>
+#include <QThread>
 #include <QTimer>
 #include <algorithm>
 #include <QElapsedTimer>
@@ -16,7 +17,6 @@
 
 //MyImage VideoFrame[9000];
 
-// more visualize links?
 // better way to show x,y?
 // more accurate time？
 // volumn control ?
@@ -40,6 +40,10 @@ MainWindow::MainWindow(QWidget *parent)
     CurrentId = 0;
     Timerswitch = new QTimer(this);
     Timerswitch->setSingleShot(true);
+    //Timerswitch->setInterval(m_waitingtime);
+    //Newthread = new QThread(this);
+    //Timerswitch->moveToThread(Newthread);
+    //connect(Newthread, SIGNAL(started()), Timerswitch, SLOT(start()));
     //QTimer::singleShot(m_waitingtime, this,SLOT(OnTimerSwitch()));
     connect(Timerswitch, SIGNAL(timeout()), this, SLOT(OnTimerSwitch()));
 }
@@ -63,7 +67,7 @@ void MainWindow::OnTimerSwitch()
 {
     QElapsedTimer timedebuge;
     timedebuge.start();
-    CurrentId++;
+    CurrentId=SoundPlayer->position()*ImageArray.size()/SoundPlayer->duration();
     if (CurrentId >= ImageArray.size())
     {
         //QImage image(data,width,height,每行字节数,QImage::Format_RGB888);
@@ -82,7 +86,8 @@ void MainWindow::OnTimerSwitch()
         }
         //nextimg.load(ImageArray[CurrentId]->qsImagePath);
     }
-    qDebug()<<"show one image need: "<<timedebuge.elapsed()<<"ms";
+    //qDebug()<<"show one image need: "<<timedebuge.elapsed()<<"ms";
+    //Newthread->start();
     this->UpdateTimer(timedebuge.elapsed());
 }
 void MainWindow::ShowImage()
@@ -285,12 +290,16 @@ void MainWindow::on_LoadVideoButton_clicked()
         qDebug() << filepath;
         SoundPlayer->setSource(QUrl::fromLocalFile(wavfile->at(0).filePath()));
         audioOutput->setVolume(50);
-
         ui->PlayButton->setEnabled(true);
         ui->RestartButton->setEnabled(true);
         ui->PauseButton->setEnabled(false);
-        statusBar()->showMessage(tr("Done"));
-        ShowImage();
+        QObject::connect(SoundPlayer, &QMediaPlayer::mediaStatusChanged,
+                             [&](QMediaPlayer::MediaStatus status){
+                if(status == QMediaPlayer::LoadedMedia) {
+                    statusBar()->showMessage(tr("Done"));
+                    ShowImage();
+                }
+        });
     }
 }
 
@@ -298,6 +307,7 @@ void MainWindow::on_PlayButton_clicked(bool checked)
 {
     SoundPlayer->play();
     Timerswitch->start();
+    //Newthread->start();
     ui->PauseButton->setEnabled(true);
     ui->PlayButton->setEnabled(false);
 }
@@ -305,6 +315,7 @@ void MainWindow::on_PlayButton_clicked(bool checked)
 void MainWindow::on_PauseButton_clicked(bool checked)
 {
     Timerswitch->stop();
+    //Newthread->quit();
     SoundPlayer->pause();
     ui->PlayButton->setEnabled(true);
     ui->PauseButton->setEnabled(false);
@@ -369,6 +380,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) // release
                     {
                         //LoadImage
                         ui->label_statue->setText("Next Video");
+                        //Newthread->quit();
                         Timerswitch->stop();
                         SoundPlayer->stop();
                         LoadSecond(link.first,link.second[i]);
@@ -445,7 +457,8 @@ void MainWindow::LoadSecond(QString dir_name,int n){
                     ShowImage();
                     SoundPlayer->setPosition(SoundPlayer->duration()/9000*CurrentId);
                     SoundPlayer->play();
-                    Timerswitch->start(m_waitingtime);
+                    Timerswitch->start();
+                    //Newthread->start();
                 }
         });
     }
@@ -454,8 +467,9 @@ void MainWindow::LoadSecond(QString dir_name,int n){
 void MainWindow::on_RestartButton_clicked()
 {
     CurrentId=0;
-    Timerswitch->stop();
     SoundPlayer->stop();
+    Timerswitch->stop();
+    //Newthread->quit();
     ui->PlayButton->setEnabled(true);
     ui->PauseButton->setEnabled(false);
     statusBar()->showMessage(tr("RESTART"));

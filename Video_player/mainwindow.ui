@@ -187,7 +187,7 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
-         <widget class="myqlabel" name="Video">
+         <widget class="MyQLable" name="Video">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -219,7 +219,7 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>myqlabel</class>
+   <class>MyQLable</class>
    <extends>QLabel</extends>
    <header location="global">myqlabel.h</header>
   </customwidget>
